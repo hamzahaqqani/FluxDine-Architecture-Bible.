@@ -37,16 +37,16 @@ FluxDine provides the technology required to support restaurant digital operatio
 
 # 3. Architecture Bible Structure
 
-The Architecture Bible is organized into nine major architectural layers:
+The Architecture Bible is organized into nine major architectural sections:
 
 ```text
 00 Governance
         ↓
-01 Business Architecture
+01 Core Architecture
         ↓
-02 Platform Architecture
+02 Engineering Specifications
         ↓
-03 Product Workflows
+03 Product Modules
         ↓
 04 Shared Platform Services
         ↓
@@ -64,6 +64,10 @@ Each section answers a different architectural question.
 ---
 
 # 4. 00 Governance
+
+```text
+00 Governance/
+```
 
 The Governance section establishes the principles and language that govern the entire architecture.
 
@@ -99,76 +103,59 @@ Governance documents sit at the top of the architectural hierarchy.
 
 ---
 
-# 5. 01 Business Architecture
+# 5. 01 Core Architecture
 
 ```text
-01 Business Architecture/
+01 Core Architecture/
 ```
 
-This section defines the business architecture of FluxDine.
+This section defines the core architecture of FluxDine.
 
-It describes the business model, organizational boundaries, actors, capabilities, business domains, and business relationships that the technical platform must support.
+It establishes the foundational architectural structure from which the platform is designed.
 
-The technical architecture must serve the approved business architecture.
+It defines the major architectural concepts, boundaries, relationships, and principles required to understand the FluxDine platform as a whole.
+
+The remaining architectural sections must remain consistent with the approved Core Architecture.
 
 ---
 
-# 6. 02 Platform Architecture
+# 6. 02 Engineering Specifications
 
 ```text
-02 Platform Architecture/
+02 Engineering Specifications/
 ```
 
-This section defines the technical platform architecture.
+This section defines the detailed engineering specifications required to implement the FluxDine architecture.
 
-It establishes:
+It establishes the technical contracts, engineering-level specifications, and implementation constraints that support the approved architecture.
 
-- Major platform components.
-- Applications.
-- Service boundaries.
-- Infrastructure concepts.
-- Communication patterns.
-- Data ownership.
-- Security boundaries.
-- Platform-wide architectural relationships.
+Engineering specifications must remain consistent with:
 
-This is the primary technical architecture layer.
+- Governance
+- Core Architecture
+- Product Modules
+- Shared Platform Services
+- Architecture Decision Records
 
 ---
 
-# 7. 03 Product Workflows
+# 7. 03 Product Modules
 
 ```text
-03 Product Workflows/
+03 Product Modules/
 ```
 
-This section defines the major product and customer workflows.
+This section defines the major product modules of the FluxDine platform.
 
-The current workflow set includes:
+It describes the product capabilities, module boundaries, responsibilities, and relationships that make up the FluxDine product ecosystem.
 
-```text
-Landing Website
-Registration Flow
-Email Verification
-Plan Selection
-Trial Management
-Onboarding Wizard
-Restaurant Configuration
-Payment Gateway Configuration
-Domain Configuration
-Theme Configuration
-Launch Workflow
-Customer Journey
-```
+Product modules must remain consistent with:
 
-These documents explain how users and businesses move through the FluxDine platform.
-
-Workflows must remain consistent with:
-
-- Business Architecture
-- Platform Architecture
-- Shared Services
-- ADRs
+- Governance
+- Core Architecture
+- Engineering Specifications
+- Shared Platform Services
+- Architecture Decision Records
 
 ---
 
@@ -673,11 +660,11 @@ When interpreting FluxDine architecture, use the following hierarchy:
 ```text
 Governance
      ↓
-Business Architecture
+Core Architecture
      ↓
-Platform Architecture
+Engineering Specifications
      ↓
-Product Workflows
+Product Modules
      ↓
 Shared Platform Services
      ↓
@@ -701,11 +688,11 @@ A developer beginning a new feature should follow:
 ```text
 1. Understand the business requirement.
 
-2. Read the relevant Business Architecture.
+2. Read the relevant Core Architecture.
 
-3. Read the relevant Platform Architecture.
+3. Read the relevant Engineering Specifications.
 
-4. Read the relevant Product Workflow.
+4. Read the relevant Product Module.
 
 5. Identify the owning service.
 
@@ -763,7 +750,7 @@ Every significant feature should follow:
 ```text
 Business Requirement
         ↓
-Workflow
+Product Module / Workflow
         ↓
 Service Ownership
         ↓
@@ -788,7 +775,7 @@ A major architectural capability should have, where applicable:
 
 - Business definition
 - Platform definition
-- Workflow
+- Product/module definition
 - Service ownership
 - API contract
 - Database model
@@ -1037,11 +1024,11 @@ FLUXDINE-ARCHITECTURE/
 │   ├── Documentation Standards.md
 │   └── Naming Standards.md
 │
-├── 01 Business Architecture/
+├── 01 Core Architecture/
 │
-├── 02 Platform Architecture/
+├── 02 Engineering Specifications/
 │
-├── 03 Product Workflows/
+├── 03 Product Modules/
 │
 ├── 04 Shared Platform Services/
 │
@@ -1073,7 +1060,7 @@ Use the Architecture Bible to ensure the platform remains aligned with the compa
 Use it to understand:
 
 - Business capabilities
-- Product workflows
+- Product modules
 - Service boundaries
 - Customer journeys
 
@@ -1183,11 +1170,11 @@ But the architecture should provide a stable foundation from which FluxDine can 
 
 **Governance:** Established
 
-**Business Architecture:** Established
+**Core Architecture:** Established
 
-**Platform Architecture:** Established
+**Engineering Specifications:** Established
 
-**Product Workflows:** Established
+**Product Modules:** Established
 
 **Shared Platform Services:** Established
 
