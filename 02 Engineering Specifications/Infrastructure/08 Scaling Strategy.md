@@ -1,4 +1,4 @@
-# 04 Engineering Specifications
+# 02 Engineering Specifications
 
 # Infrastructure
 
@@ -9,641 +9,1640 @@
 # Document Control
 
 | Field | Value |
-|--------|-------|
-| **Document ID** | FD-ENG-INF-008 |
-| **Document Name** | Scaling Strategy |
-| **Version** | 1.0 |
-| **Status** | Approved and Locked |
-| **Owner** | FluxDine Engineering |
-| **Classification** | Internal Engineering Specification |
-| **Depends On** | Deployment Specification<br>Monitoring<br>Cache Specification<br>Queue Specification |
-| **Referenced By** | Operations Team<br>Infrastructure Architecture<br>Performance Engineering |
-
----
-
-# Dependencies
-
-This specification depends upon:
-
-- Deployment Specification
-- Monitoring
-- Cache Specification
-- Queue Specification
-- Database Engineering Specifications
-
-Scaling ensures the FluxDine platform can accommodate increasing users, restaurants, orders, and infrastructure demand while maintaining performance, reliability, and availability.
-
----
-
-# Referenced By
-
-This specification is referenced by:
-
-- Deployment Specification
-- Monitoring
-- Disaster Recovery
-- Operations Team
-- Performance Engineering
-
----
-
-# Document Status
-
-| Item | Value |
-|------|-------|
+|---|---|
+| Document ID | FD-ENG-INF-008 |
+| Document Name | Scaling Strategy |
+| Version | 1.1 |
 | Status | Approved and Locked |
-| Approval | Approved |
-| Implementation | Architecture Complete |
-| Last Updated | TBD |
+| Classification | Engineering Specification |
+| Architecture Area | Infrastructure |
+| Phase | Phase 07 — Infrastructure & Production Readiness |
+| Owner | FluxDine Engineering |
+| Authority | FluxDine Architecture Bible |
+| Review Frequency | Review when workload, infrastructure, or provider architecture materially changes |
 
 ---
 
-# Purpose
+# 1. Purpose
 
-This document defines the scalability architecture used throughout the FluxDine platform.
+This document defines the scaling strategy for the FluxDine platform.
 
-The Scaling Strategy provides standardized guidance for increasing platform capacity through horizontal and vertical scaling while maintaining reliability, availability, fault tolerance, and operational efficiency.
+The purpose of this specification is to establish how FluxDine scales as the number of tenants, restaurants, branches, users, orders, API requests, stored objects, scheduled workloads, and external-provider interactions increases.
 
-This document serves as the authoritative Scaling Strategy specification.
+The scaling strategy is designed to:
 
----
+- preserve tenant isolation;
+- preserve application correctness;
+- preserve data consistency;
+- maintain predictable performance;
+- use managed infrastructure where appropriate;
+- scale infrastructure according to measured workload;
+- avoid premature infrastructure complexity;
+- identify measurable scaling triggers;
+- define a controlled path from initial production to higher-scale architecture;
+- preserve the ability to migrate infrastructure providers when justified;
+- prevent a single tenant or workload from degrading the platform;
+- maintain security and operational controls during scaling.
 
-# Scope
+Scaling decisions must be evidence-driven.
 
-This specification defines:
+FluxDine must not introduce distributed infrastructure solely because it is theoretically capable of supporting higher scale.
 
-- Scaling architecture
-- Horizontal scaling
-- Vertical scaling
-- Stateless services
-- Database scaling
-- Cache scaling
-- Queue scaling
-- Storage scaling
-- Auto scaling
-- Capacity planning
-- Engineering standards
-
----
-
-# Out of Scope
-
-This specification does not define:
-
-- Infrastructure provisioning
-- Monitoring implementation
-- Backup implementation
-- Disaster recovery implementation
-
-These topics are documented separately.
+The architecture must first use the capabilities of the existing managed platform effectively and introduce additional infrastructure only when measured workload or reliability requirements justify it.
 
 ---
 
-# Scaling Philosophy
+# 2. Scope
 
-The platform shall be:
+This specification covers:
 
-- Horizontally scalable.
-- Fault tolerant.
-- Highly available.
-- Stateless where practical.
-- Elastic.
-- Observable.
-- Performance driven.
-
-Scaling shall occur without requiring application redesign.
+- application scaling;
+- Vercel application execution;
+- serverless workload scaling;
+- database scaling;
+- tenant-aware scaling;
+- restaurant and branch workload growth;
+- object-storage scaling;
+- email-provider scaling;
+- scheduled workload scaling;
+- caching strategy;
+- background-processing strategy;
+- capacity planning;
+- scaling signals;
+- scaling triggers;
+- noisy-neighbor protection;
+- scaling stages;
+- future infrastructure evolution;
+- performance and availability considerations;
+- scaling-related security requirements.
 
 ---
 
-# Scaling Architecture
+# 3. Out of Scope
+
+This document does not define:
+
+- detailed database schema design;
+- database naming conventions;
+- API contracts;
+- authentication implementation;
+- payment business rules;
+- DNS implementation;
+- deployment procedures;
+- CI/CD implementation;
+- detailed disaster recovery procedures;
+- detailed backup implementation;
+- application feature requirements.
+
+Those concerns are defined by their respective architecture and engineering specifications.
+
+This document may reference those systems where their behavior affects scaling.
+
+---
+
+# 4. Scaling Philosophy
+
+FluxDine follows a managed-first and evidence-driven scaling philosophy.
+
+The platform should scale through the capabilities of its existing managed providers before introducing additional distributed infrastructure.
+
+The initial architecture is intentionally simple:
+
+- Vercel hosts and executes the Next.js application;
+- Turso provides the production database;
+- the database uses a shared-database/shared-schema tenant model;
+- Cloudflare provides the DNS layer;
+- Cloudflare R2 provides object storage;
+- Resend provides email delivery;
+- Sentry provides application error monitoring and observability;
+- scheduled workloads use the available Vercel Cron capability;
+- no dedicated distributed cache is required initially;
+- no dedicated queue is required initially;
+- no dedicated worker cluster is required initially;
+- no Kubernetes or VM infrastructure is required initially.
+
+Scaling must therefore occur progressively.
+
+The preferred order is:
+
+1. measure;
+2. optimize;
+3. remove inefficient workload patterns;
+4. improve indexes and queries;
+5. improve application execution;
+6. use managed-provider scaling capabilities;
+7. isolate heavy workloads;
+8. introduce asynchronous processing where justified;
+9. introduce caching where correctness permits;
+10. migrate infrastructure only when the current platform becomes a demonstrated constraint.
+
+---
+
+# 5. Scaling Principles
+
+## SCALE-001 — Evidence-Driven Scaling
+
+Infrastructure changes must be based on observed workload, performance, reliability, or capacity requirements.
+
+The platform must not introduce infrastructure solely based on theoretical future scale.
+
+---
+
+## SCALE-002 — Managed Infrastructure First
+
+FluxDine should prefer managed infrastructure over self-managed infrastructure whenever the managed solution satisfies the required workload and reliability characteristics.
+
+---
+
+## SCALE-003 — Stateless Application Execution
+
+Application execution should remain stateless wherever practical.
+
+Requests must not depend on:
+
+- local process memory;
+- local filesystem persistence;
+- a specific application instance;
+- a specific Vercel execution environment.
+
+Persistent state must reside in durable platform services.
+
+---
+
+## SCALE-004 — Tenant Isolation Must Survive Scaling
+
+Scaling must never weaken tenant isolation.
+
+Increasing platform capacity must not introduce a mechanism through which:
+
+- one tenant can access another tenant's data;
+- one restaurant can access another restaurant's resources;
+- tenant-scoped configuration becomes globally mutable;
+- background processing loses tenant context;
+- cached data crosses tenant boundaries.
+
+---
+
+## SCALE-005 — Optimize Before Distributing
+
+Before introducing queues, workers, caches, replicas, or additional services, FluxDine should first verify:
+
+- query efficiency;
+- indexes;
+- pagination;
+- payload size;
+- unnecessary API calls;
+- repeated computation;
+- database access patterns;
+- object-storage access patterns;
+- email workload;
+- scheduled workload efficiency.
+
+---
+
+## SCALE-006 — Avoid Premature Distribution
+
+Distributed infrastructure introduces:
+
+- operational complexity;
+- failure modes;
+- consistency considerations;
+- observability requirements;
+- deployment complexity;
+- additional security boundaries.
+
+Distributed infrastructure must therefore be introduced only when justified by measured requirements.
+
+---
+
+## SCALE-007 — Correctness Before Performance
+
+Performance improvements must not compromise:
+
+- authorization;
+- tenant isolation;
+- transactional correctness;
+- payment correctness;
+- order correctness;
+- reservation correctness;
+- auditability;
+- data durability.
+
+---
+
+## SCALE-008 — Externalize Durable State
+
+Important application state must not depend on ephemeral execution environments.
+
+Durable state must use appropriate persistent services such as:
+
+- Turso;
+- R2;
+- provider-managed systems;
+- future durable infrastructure where explicitly approved.
+
+---
+
+## SCALE-009 — Noisy-Neighbor Protection
+
+The workload generated by one tenant must not be allowed to degrade the platform disproportionately.
+
+Where required, FluxDine may introduce:
+
+- rate limits;
+- quotas;
+- workload controls;
+- request prioritization;
+- asynchronous processing;
+- tenant-level operational controls.
+
+These controls must be introduced according to measured workload.
+
+---
+
+## SCALE-010 — Observable Scaling
+
+Scaling decisions must be supported by observability.
+
+Relevant signals must be available through the platform's monitoring and operational tooling.
+
+---
+
+## SCALE-011 — Provider-Aware Scaling
+
+Scaling must account for the limits and capabilities of the underlying providers.
+
+Provider limitations must be treated as architectural constraints when they materially affect workload capacity.
+
+---
+
+## SCALE-012 — Incremental Evolution
+
+Scaling architecture must evolve incrementally.
+
+A more complex architecture should be introduced only when the current architecture reaches a measurable operational, performance, reliability, or capacity boundary.
+
+---
+
+# 6. Current Scaling Architecture
+
+The current FluxDine architecture uses managed services.
+
+The current high-level scaling path is:
 
 ```text
-Users
+Client
+   |
+   v
+Cloudflare DNS
+   |
+   v
+Vercel
+Next.js Application
+Serverless Execution
+   |
+   +--------------------+
+   |                    |
+   v                    v
+Turso                  R2
+Database               Object Storage
+   |
+   +--------------------+
+   |
+   v
+Resend / Sentry / Other Shared Services
+````
 
-↓
+Scheduled workloads may execute through Vercel Cron.
 
-Load Balancer
+There is currently no requirement for:
 
-↓
+* dedicated load balancers;
+* dedicated frontend servers;
+* dedicated backend servers;
+* dedicated worker servers;
+* distributed queue infrastructure;
+* dedicated distributed cache infrastructure;
+* Kubernetes;
+* self-managed virtual machines;
+* database read replicas.
 
-Frontend Instances
+Those capabilities remain future architectural options.
 
-↓
+---
 
-Backend API Instances
+# 7. Application Scaling
 
-↓
+## 7.1 Current Application Model
 
-Background Workers
+FluxDine is implemented as a Next.js application deployed through Vercel.
 
-↓
+Application requests are executed through Vercel-managed infrastructure.
 
-Cache
+The application should therefore be designed to scale horizontally through additional serverless execution capacity rather than through manually managed application instances.
 
-↓
+---
 
-Queue
+## 7.2 Stateless Request Processing
 
-↓
+Application requests should not rely on local process state.
 
-Database
+The following patterns should be avoided:
 
-↓
+* storing business state in process memory;
+* relying on a specific server instance;
+* writing durable files to local execution storage;
+* using local memory as the authoritative source of session or business state.
 
-Object Storage
+---
+
+## 7.3 Application Scaling Priorities
+
+When application performance degrades, investigation should proceed in the following order:
+
+1. identify the affected endpoint or workload;
+2. measure request latency and error rate;
+3. inspect database queries;
+4. inspect external-provider calls;
+5. inspect payload size;
+6. inspect repeated computation;
+7. inspect scheduled workloads;
+8. optimize inefficient code;
+9. introduce caching where safe;
+10. isolate heavy asynchronous workloads if required.
+
+---
+
+# 8. Database Scaling
+
+## 8.1 Current Database Architecture
+
+FluxDine currently uses:
+
+* Turso;
+* shared database;
+* shared schema;
+* tenant-scoped application data;
+* tenant and restaurant ownership enforcement.
+
+The current database is the primary durable system of record for application business data.
+
+---
+
+## 8.2 Database Scaling Philosophy
+
+Database scaling should initially focus on workload efficiency rather than architectural distribution.
+
+Priority order:
+
+1. correct tenant-scoped queries;
+2. correct indexes;
+3. efficient query plans;
+4. bounded result sets;
+5. pagination;
+6. avoiding unnecessary repeated queries;
+7. reducing excessive round trips;
+8. reducing unnecessary writes;
+9. schema optimization;
+10. provider capacity improvements;
+11. only then consider architectural distribution.
+
+---
+
+## 8.3 Query Efficiency
+
+Application queries must:
+
+* use appropriate indexes;
+* filter by tenant scope where required;
+* avoid unbounded result sets;
+* avoid unnecessary joins;
+* avoid unnecessary columns;
+* paginate large collections;
+* avoid repeated identical queries where appropriate;
+* avoid full-table operations during normal request processing.
+
+---
+
+## 8.4 Tenant-Scoped Database Access
+
+Tenant-aware database access is a scaling requirement as well as a security requirement.
+
+Queries should use the narrowest appropriate scope:
+
+```text
+Tenant
+  |
+  +-- Restaurant
+        |
+        +-- Branch
+              |
+              +-- Business Data
 ```
 
-Every layer shall support independent scaling where practical.
+The application should not retrieve broad platform-wide datasets when a tenant, restaurant, or branch-scoped query is sufficient.
 
 ---
 
-# Scaling Principles
+## 8.5 Database Growth Signals
 
-The platform shall support:
+Database scaling decisions should consider:
 
-- Independent service scaling.
-- Incremental capacity expansion.
-- Resource isolation.
-- Fault isolation.
-- Performance optimization.
-
-Each component shall scale independently.
-
----
-
-# Horizontal Scaling
-
-Horizontal scaling increases capacity by adding additional instances.
-
-Examples:
-
-- API servers
-- Frontend servers
-- Background workers
-- Queue workers
-
-Advantages:
-
-- High availability
-- Fault tolerance
-- Elastic capacity
-
-Horizontal scaling is the preferred scaling strategy.
+* total database size;
+* tenant count;
+* restaurant count;
+* branch count;
+* user count;
+* order volume;
+* reservation volume;
+* menu/catalog growth;
+* query latency;
+* write volume;
+* read volume;
+* migration duration;
+* backup duration;
+* database provider limits.
 
 ---
 
-# Vertical Scaling
+## 8.6 Future Database Scaling
 
-Vertical scaling increases the resources of an existing instance.
+If Turso becomes a demonstrated constraint, FluxDine may evaluate:
 
-Examples:
+* database optimization;
+* provider capacity upgrades;
+* workload separation;
+* PostgreSQL migration;
+* read scaling;
+* specialized reporting infrastructure;
+* archival strategies.
 
-- Additional CPU
-- Additional Memory
-- Faster Storage
-- Increased Network Bandwidth
+PostgreSQL is a future migration target, not the current production database.
 
-Vertical scaling may be used when horizontal scaling is not practical.
-
----
-
-# Stateless Services
-
-Application services shall remain stateless.
-
-Session-specific information shall not reside within application instances.
-
-Benefits include:
-
-- Horizontal scaling
-- Load balancing
-- Simplified deployments
-- High availability
+Database migration must be governed by a dedicated architecture decision and migration plan.
 
 ---
 
-# Load Balancing
+# 9. Tenant and Restaurant Scaling
 
-Incoming requests shall be distributed across multiple application instances.
+FluxDine is a multi-tenant platform.
 
-Load balancing objectives include:
+Scaling must therefore consider both:
 
-- Even request distribution
-- High availability
-- Fault isolation
-- Automatic instance replacement
+* total platform workload;
+* workload distribution across tenants.
 
-Load balancing implementation remains infrastructure independent.
+A platform with 10,000 restaurants does not necessarily produce the same workload as one with 1,000 restaurants.
 
----
+Important workload variables include:
 
-# Database Scaling
-
-Database scaling strategies may include:
-
-- Read replicas
-- Query optimization
-- Connection pooling
-- Index optimization
-- Partitioning where appropriate
-
-Database consistency shall always be preserved.
+* restaurants per tenant;
+* branches per restaurant;
+* concurrent users;
+* active storefront traffic;
+* order frequency;
+* administrative traffic;
+* reservation activity;
+* catalog size;
+* file usage;
+* email volume;
+* scheduled workloads.
 
 ---
 
-# Cache Scaling
+# 10. Noisy-Neighbor Protection
 
-Caching shall reduce database load by:
+A single high-volume tenant may generate disproportionately high:
 
-- Serving frequently accessed data
-- Reducing repeated queries
-- Improving response times
+* API requests;
+* database queries;
+* order activity;
+* file operations;
+* email activity;
+* administrative operations.
 
-Distributed cache instances shall support horizontal scaling.
+FluxDine must retain the ability to protect platform stability from disproportionate workload.
 
----
+Potential controls include:
 
-# Queue Scaling
+* tenant-aware rate limits;
+* endpoint rate limits;
+* API quotas;
+* workload prioritization;
+* asynchronous processing;
+* per-tenant operational controls;
+* abuse detection;
+* provider-level limits.
 
-Queue processing shall scale independently.
-
-Scaling strategies include:
-
-- Additional workers
-- Queue partitioning
-- Priority queues
-- Dedicated processing pools
-
-Queue processing shall remain asynchronous.
-
----
-
-# Background Worker Scaling
-
-Background workers shall scale independently from API services.
-
-Workers may increase based upon:
-
-- Queue depth
-- Processing latency
-- Scheduled workload
-
-Worker scaling shall not impact API availability.
+These controls should be introduced when measured workload demonstrates the need.
 
 ---
 
-# Storage Scaling
+# 11. Object Storage Scaling
 
-Object storage shall support:
+## 11.1 Current Object Storage
 
-- Elastic storage growth
-- High durability
-- High availability
-- Geographic redundancy where applicable
+FluxDine uses Cloudflare R2 for object storage.
 
-Application architecture shall remain independent of storage implementation.
+R2 is intended for durable objects such as:
 
----
-
-# Network Scaling
-
-Network infrastructure shall support:
-
-- Increased traffic
-- Geographic expansion
-- Secure connectivity
-- High throughput
-
-Network scaling shall preserve application availability.
+* restaurant assets;
+* uploaded media;
+* generated files;
+* other application-managed objects.
 
 ---
 
-# Auto Scaling
+## 11.2 Object Storage Scaling
 
-Infrastructure may automatically scale according to operational metrics.
+Object storage should scale independently from application compute.
 
-Typical scaling triggers include:
+The application must not treat local application execution storage as the authoritative storage layer for durable objects.
 
-- CPU utilization
-- Memory utilization
-- Request throughput
-- Queue depth
-- Response latency
+Scaling considerations include:
 
-Scaling thresholds shall be configurable.
-
----
-
-# Capacity Planning
-
-Capacity planning shall evaluate:
-
-- User growth
-- Restaurant growth
-- Order volume
-- Database growth
-- Storage growth
-- API traffic
-- Queue utilization
-
-Capacity planning shall occur regularly.
+* total object count;
+* total storage volume;
+* upload volume;
+* download volume;
+* object size;
+* access frequency;
+* retention requirements;
+* lifecycle requirements.
 
 ---
 
-# Performance Optimization
+## 11.3 Object Storage Performance
 
-Performance optimization strategies include:
+Large or frequently accessed objects should not unnecessarily pass through application compute when direct or provider-supported object access is appropriate.
 
-- Caching
-- Lazy loading
-- Query optimization
-- Asynchronous processing
-- Connection pooling
-- Resource optimization
-
-Optimization shall preserve correctness.
+Object access must remain authorized and tenant-safe.
 
 ---
 
-# Monitoring
+# 12. Email Scaling
 
-Scaling decisions shall be supported by monitoring of:
+FluxDine uses Resend for email delivery.
 
-- CPU usage
-- Memory usage
-- Disk utilization
-- Network utilization
-- Queue depth
-- Cache hit rate
-- Database latency
-- API latency
+Email workload may grow with:
 
-Scaling shall be data driven.
+* customer orders;
+* owner onboarding;
+* authentication;
+* notifications;
+* transactional messages;
+* operational alerts;
+* marketing functionality where applicable.
 
----
+Email scaling must account for:
 
-# Scaling Limits
+* provider rate limits;
+* delivery failures;
+* retry behavior;
+* message volume;
+* burst behavior;
+* template generation cost.
 
-Every service shall define:
-
-- Minimum capacity
-- Maximum capacity
-- Scaling thresholds
-- Resource limits
-
-Operational limits shall prevent uncontrolled resource consumption.
+Email delivery should not unnecessarily block critical request processing where asynchronous processing is appropriate.
 
 ---
 
-# Failure Handling
+# 13. Scheduled Workloads
 
-Scaling failures shall:
+## 13.1 Current Model
 
-- Generate operational alerts.
-- Preserve service availability.
-- Prevent cascading failures.
-- Support manual intervention.
+Scheduled workloads currently use Vercel Cron.
 
-Scaling failures shall not interrupt customer operations.
+The current production scheduling model is intentionally lightweight.
 
----
-
-# Security
-
-Scaling shall preserve:
-
-- Authentication
-- Authorization
-- Tenant isolation
-- Data protection
-- Network security
-
-Security requirements remain unchanged regardless of platform size.
+The current scheduled workload must not be treated as a general-purpose distributed job-processing platform.
 
 ---
 
-# Engineering Rules
+## 13.2 Scheduled Workload Requirements
 
-## Rule SCALE-001
+Scheduled jobs must:
 
-Application services shall remain stateless.
-
----
-
-## Rule SCALE-002
-
-Horizontal scaling shall be preferred whenever practical.
-
----
-
-## Rule SCALE-003
-
-Every infrastructure layer shall support independent scaling.
+* be idempotent where practical;
+* avoid duplicate destructive operations;
+* enforce authorization;
+* use appropriate secrets;
+* be observable;
+* fail safely;
+* avoid unbounded work;
+* respect tenant isolation.
 
 ---
 
-## Rule SCALE-004
+## 13.3 Future Background Processing
 
-Scaling decisions shall be driven by operational metrics.
+If scheduled or asynchronous workload increases beyond what is appropriate for direct Vercel execution, FluxDine may introduce:
 
----
+* a durable queue;
+* dedicated background workers;
+* job retry mechanisms;
+* dead-letter handling;
+* workload prioritization.
 
-## Rule SCALE-005
-
-Database consistency shall be preserved during scaling.
-
----
-
-## Rule SCALE-006
-
-Queue workers shall scale independently of API services.
+These are future capabilities and are not assumed to exist in the initial architecture.
 
 ---
 
-## Rule SCALE-007
+# 14. Caching Strategy
 
-Caching shall reduce unnecessary database load.
+## 14.1 Current Position
 
----
+FluxDine does not require a dedicated distributed cache for initial production.
 
-## Rule SCALE-008
-
-Auto scaling thresholds shall be configurable.
+Caching must not be introduced simply because caching is common in large-scale systems.
 
 ---
 
-## Rule SCALE-009
+## 14.2 Safe Caching
 
-Scaling shall preserve platform security and tenant isolation.
+Caching may be introduced where:
 
----
+* data can tolerate bounded staleness;
+* tenant boundaries are preserved;
+* authorization remains correct;
+* invalidation can be managed;
+* cache failure does not break correctness.
 
-## Rule SCALE-010
+Examples may include:
 
-This document is the authoritative Scaling Strategy specification for the FluxDine platform.
-
----
-
-# Architecture Decision Records
-
-## ADR-SCALE-001
-
-The platform prioritizes horizontal scaling.
-
----
-
-## ADR-SCALE-002
-
-Application services remain stateless.
+* public storefront content;
+* static assets;
+* infrequently changing configuration;
+* derived read-heavy data.
 
 ---
 
-## ADR-SCALE-003
+## 14.3 Cache Safety
 
-Infrastructure layers scale independently.
+The cache must never become the authoritative source for critical business state unless explicitly approved.
 
----
+Critical operations such as:
 
-## ADR-SCALE-004
+* payments;
+* order state;
+* reservation state;
+* authorization;
+* tenant membership;
 
-Operational metrics drive scaling decisions.
-
----
-
-## ADR-SCALE-005
-
-Background workers scale independently.
+must not depend on stale cached data for correctness.
 
 ---
 
-## ADR-SCALE-006
+## 14.4 Future Distributed Cache
 
-Distributed caching improves scalability.
+A distributed cache may be introduced if measured workload demonstrates:
 
----
+* excessive repeated database reads;
+* read latency pressure;
+* expensive repeated computation;
+* provider capacity constraints.
 
-## ADR-SCALE-007
-
-Queues support asynchronous horizontal scaling.
-
----
-
-## ADR-SCALE-008
-
-Scaling architecture remains infrastructure independent.
+The cache technology and architecture require a separate engineering specification before implementation.
 
 ---
 
-## ADR-SCALE-009
+# 15. Background Workers and Queues
 
-Capacity planning is performed proactively.
+There is currently no dedicated queue or worker cluster in the initial architecture.
 
----
+This is intentional.
 
-## ADR-SCALE-010
+A queue and worker system should be introduced when asynchronous workloads justify the additional operational complexity.
 
-This document is the authoritative Scaling Strategy specification for the FluxDine platform.
+Potential future workloads include:
 
----
+* email delivery orchestration;
+* bulk imports;
+* large report generation;
+* analytics processing;
+* media processing;
+* webhook processing;
+* large notification fan-out;
+* scheduled maintenance;
+* data synchronization.
 
-# Appendix A — Scaling Layers
+Future workers must preserve:
 
-| Layer | Scaling Method |
-|---------|----------------|
-| Frontend | Horizontal |
-| Backend API | Horizontal |
-| Background Workers | Horizontal |
-| Cache | Horizontal |
-| Queue | Horizontal |
-| Database | Read Replicas / Optimization |
-| Object Storage | Elastic |
-| Monitoring | Horizontal |
-
----
-
-# Appendix B — Scaling Triggers
-
-| Metric | Example Trigger |
-|----------|----------------|
-| CPU Usage | High Utilization |
-| Memory Usage | High Consumption |
-| API Throughput | Increased Requests |
-| Queue Depth | Processing Backlog |
-| Response Time | Elevated Latency |
-| Database Connections | Connection Saturation |
-| Cache Hit Rate | Reduced Performance |
+* tenant context;
+* authorization;
+* idempotency;
+* retry safety;
+* observability;
+* auditability.
 
 ---
 
-# Appendix C — Scaling Workflow
+# 16. Observability-Driven Scaling
+
+Scaling decisions must use observable signals.
+
+Primary signals include:
+
+### Application
+
+* request latency;
+* error rate;
+* throughput;
+* timeout rate;
+* serverless execution behavior.
+
+### Database
+
+* query latency;
+* query failures;
+* database size;
+* read/write workload;
+* migration duration;
+* provider capacity.
+
+### Object Storage
+
+* storage growth;
+* upload volume;
+* download volume;
+* operation failures.
+
+### Email
+
+* message volume;
+* provider errors;
+* delivery failures;
+* rate-limit responses.
+
+### Scheduled Workloads
+
+* execution failures;
+* execution duration;
+* backlog;
+* duplicate execution;
+* missed execution.
+
+### Platform
+
+* tenant growth;
+* restaurant growth;
+* branch growth;
+* active users;
+* order volume.
+
+---
+
+# 17. Capacity Planning
+
+Capacity planning must use actual workload measurements.
+
+The following dimensions should be tracked:
+
+| Capacity Dimension | Example Signal              |
+| ------------------ | --------------------------- |
+| Tenants            | Active tenants              |
+| Restaurants        | Active restaurants          |
+| Branches           | Active branches             |
+| Users              | Active users                |
+| API                | Requests per minute         |
+| Orders             | Orders per minute/hour/day  |
+| Reservations       | Reservations per day        |
+| Database           | Storage and query workload  |
+| R2                 | Object count and storage    |
+| Email              | Messages per day/hour       |
+| Scheduled Jobs     | Executions and duration     |
+| Errors             | Error rate                  |
+| Latency            | p50/p95/p99 where available |
+
+The platform should establish empirical baselines before defining hard capacity thresholds.
+
+---
+
+# 18. Scaling Triggers
+
+Scaling decisions should be triggered by sustained evidence rather than isolated spikes.
+
+Potential triggers include:
+
+* sustained application latency increase;
+* sustained error increase;
+* database query degradation;
+* database capacity pressure;
+* increasing migration duration;
+* storage growth approaching provider limits;
+* increasing email-provider rate limits;
+* scheduled jobs approaching execution limits;
+* increased timeout frequency;
+* a single tenant producing disproportionate workload;
+* inability to meet operational objectives;
+* provider capacity constraints.
+
+A temporary traffic spike does not automatically justify permanent infrastructure changes.
+
+---
+
+# 19. Scaling Investigation Workflow
+
+When a scaling signal is detected:
 
 ```text
-Monitoring
+Detect Signal
+     |
+     v
+Measure Workload
+     |
+     v
+Identify Bottleneck
+     |
+     v
+Confirm Scope
+     |
+     +----------------------+
+     |                      |
+     v                      v
+Application             Database
+     |                      |
+     +----------+-----------+
+                |
+                v
+        Optimize Existing Path
+                |
+                v
+        Re-measure Workload
+                |
+                v
+      Is Constraint Resolved?
+          /             \
+        Yes              No
+         |                |
+         v                v
+       Stop       Evaluate Architecture
+                         |
+                         v
+                  Approve Scaling Change
+                         |
+                         v
+                    Implement
+                         |
+                         v
+                    Validate
+```
 
-↓
+---
 
-Threshold Reached
+# 20. Scaling Stages
 
-↓
+## Stage 1 — Initial Production
 
-Scaling Decision
+The initial production architecture uses:
 
-↓
+* Vercel;
+* Next.js;
+* Turso;
+* shared database/shared schema;
+* Cloudflare DNS;
+* Cloudflare R2;
+* Resend;
+* Sentry;
+* Vercel Cron.
 
-Provision Capacity
+Priority:
 
-↓
+* correctness;
+* tenant isolation;
+* query efficiency;
+* observability;
+* reliable deployments;
+* backup and recovery;
+* controlled workload growth.
 
+No distributed queue, worker cluster, or dedicated cache is required.
+
+---
+
+## Stage 2 — Growth
+
+As workload increases, the first scaling actions should generally include:
+
+* query optimization;
+* index optimization;
+* API optimization;
+* pagination;
+* payload reduction;
+* improved monitoring;
+* Vercel capacity evaluation;
+* database capacity evaluation;
+* provider limit review;
+* workload isolation where required;
+* asynchronous processing for suitable workloads.
+
+A dedicated queue, worker, or cache may be introduced if measured workload justifies it.
+
+---
+
+## Stage 3 — Significant Scale
+
+At higher workload levels, FluxDine may evaluate:
+
+* dedicated background processing;
+* durable queues;
+* distributed caching;
+* database architecture evolution;
+* PostgreSQL migration;
+* read scaling;
+* analytics workload separation;
+* workload-specific services;
+* more advanced rate limiting;
+* stronger tenant-level workload controls.
+
+Every major architectural change requires an Architecture Decision Record.
+
+---
+
+## Stage 4 — Large-Scale Platform
+
+If FluxDine reaches a scale where single-provider or single-region assumptions become constraints, future architecture may evaluate:
+
+* multi-region application execution;
+* advanced database topology;
+* read replicas;
+* regional data strategies;
+* advanced traffic routing;
+* multi-provider resilience;
+* dedicated infrastructure platforms.
+
+These capabilities are not part of the initial production architecture.
+
+---
+
+# 21. Vercel Scaling Strategy
+
+Vercel is the current application hosting platform.
+
+The scaling model should use Vercel-managed application execution rather than manually managed application instances.
+
+FluxDine should evaluate:
+
+* deployment execution;
+* serverless function behavior;
+* request latency;
+* function duration;
+* concurrent workload;
+* provider quotas;
+* deployment limits;
+* scheduled-job limits.
+
+Vercel plan changes should be made only when actual workload or required capabilities justify them.
+
+A plan upgrade is an infrastructure decision, not a substitute for application optimization.
+
+---
+
+# 22. Database Provider Evolution
+
+Turso is the current production database provider.
+
+PostgreSQL is a future migration target.
+
+A migration from Turso to PostgreSQL must not be initiated merely because PostgreSQL is perceived as more scalable.
+
+The migration should be considered when one or more measurable conditions justify it, such as:
+
+* Turso capacity constraints;
+* workload characteristics better suited to PostgreSQL;
+* required database features unavailable or impractical on Turso;
+* operational requirements;
+* performance requirements;
+* scaling requirements;
+* ecosystem requirements.
+
+Any migration must include:
+
+* architecture review;
+* migration strategy;
+* compatibility assessment;
+* schema verification;
+* data migration;
+* application compatibility;
+* rollback/recovery strategy;
+* performance validation;
+* tenant-isolation validation.
+
+---
+
+# 23. Scaling and Availability
+
+Scaling must preserve availability.
+
+Scaling changes must not introduce unnecessary single points of failure.
+
+Where infrastructure is changed, FluxDine must evaluate:
+
+* failure behavior;
+* dependency failure;
+* retry behavior;
+* timeout behavior;
+* data consistency;
+* recovery behavior;
+* monitoring coverage.
+
+Scaling architecture must remain compatible with the Disaster Recovery Strategy.
+
+---
+
+# 24. Scaling and Security
+
+Scaling must preserve the Security Architecture.
+
+Additional capacity must not result in:
+
+* weaker authorization;
+* bypassed tenant checks;
+* shared credentials between unrelated workloads;
+* insecure caches;
+* unprotected queues;
+* uncontrolled background jobs;
+* excessive provider permissions.
+
+Every new scaling component becomes part of the FluxDine security boundary and must receive appropriate:
+
+* authentication;
+* authorization;
+* secret management;
+* logging;
+* monitoring;
+* access control.
+
+---
+
+# 25. Scaling and Data Consistency
+
+Performance mechanisms must not compromise business correctness.
+
+Particular care is required for:
+
+* order state;
+* reservation state;
+* payment state;
+* tenant membership;
+* restaurant configuration;
+* branch configuration;
+* subscription state.
+
+Caching, asynchronous processing, retries, and eventual consistency must be explicitly evaluated before being introduced into these workflows.
+
+---
+
+# 26. Scaling and Deployment
+
+Scaling changes must follow the Deployment Specification and CI/CD Pipeline.
+
+The deployment lifecycle remains:
+
+```text
+Architecture Review
+        |
+        v
+Implementation
+        |
+        v
+CI Validation
+        |
+        v
+Deployment
+        |
+        v
 Health Verification
-
-↓
-
-Traffic Distribution
-
-↓
-
-Continuous Monitoring
+        |
+        v
+Monitoring Verification
+        |
+        v
+Capacity/Performance Validation
 ```
+
+Scaling infrastructure must not bypass normal deployment governance.
 
 ---
 
-# Appendix D — Reserved Future Scaling Capabilities
+# 27. Scaling and Disaster Recovery
 
-Future scalability capabilities may include:
+Scaling architecture must remain compatible with the recovery objectives:
+
+* Maximum RPO: 24 hours;
+* Maximum RTO: 4 hours;
+* Minimum recoverable database backup history: 30 days.
+
+Scaling changes must consider whether they affect:
+
+* backup coverage;
+* restore procedures;
+* migration compatibility;
+* configuration recovery;
+* secret recovery;
+* object-storage recovery;
+* operational documentation.
+
+---
+
+# 28. Scaling Change Governance
+
+The following changes require architecture review:
+
+* introducing a distributed cache;
+* introducing a queue;
+* introducing dedicated workers;
+* changing database provider;
+* introducing database replicas;
+* introducing data partitioning;
+* introducing multi-region infrastructure;
+* introducing a new application service;
+* changing tenant-isolation boundaries;
+* changing the primary storage architecture.
+
+Minor provider capacity upgrades may follow normal infrastructure change procedures where architecture is unchanged.
+
+---
+
+# 29. Scaling Rules
+
+## SCALE-001
+
+Scaling decisions must be based on measured workload or operational requirements.
+
+## SCALE-002
+
+The current architecture must be optimized before introducing distributed infrastructure.
+
+## SCALE-003
+
+Application execution must remain stateless wherever practical.
+
+## SCALE-004
+
+Tenant isolation must be preserved at every scaling stage.
+
+## SCALE-005
+
+Database queries must remain appropriately tenant-scoped.
+
+## SCALE-006
+
+Large datasets must use bounded retrieval and pagination where appropriate.
+
+## SCALE-007
+
+Durable state must not depend on ephemeral application execution environments.
+
+## SCALE-008
+
+Dedicated queues and workers are future capabilities, not initial-production requirements.
+
+## SCALE-009
+
+A dedicated distributed cache is not required until measured workload justifies it.
+
+## SCALE-010
+
+PostgreSQL migration is a future architecture option, not the current production database.
+
+## SCALE-011
+
+Provider plan upgrades must be justified by workload or required capabilities.
+
+## SCALE-012
+
+Scaling must preserve security and authorization boundaries.
+
+## SCALE-013
+
+Scaling changes must remain observable.
+
+## SCALE-014
+
+Scaling changes must remain recoverable under the Disaster Recovery Strategy.
+
+## SCALE-015
+
+Major scaling architecture changes require an Architecture Decision Record.
+
+---
+
+# 30. Architectural Decisions
+
+## AD-SCALE-001 — Managed Application Scaling
+
+Vercel-managed application execution is the initial application scaling mechanism.
+
+Dedicated application servers are not required for initial production.
+
+---
+
+## AD-SCALE-002 — Shared Database / Shared Schema
+
+FluxDine retains the shared-database/shared-schema tenant architecture during initial scaling.
+
+Tenant isolation is enforced through application and database access patterns.
+
+---
+
+## AD-SCALE-003 — Optimization Before Distribution
+
+FluxDine will optimize application and database workload before introducing distributed infrastructure.
+
+---
+
+## AD-SCALE-004 — No Initial Distributed Cache
+
+FluxDine does not require a dedicated distributed cache for initial production.
+
+---
+
+## AD-SCALE-005 — No Initial Queue or Worker Cluster
+
+FluxDine does not require dedicated queue or worker infrastructure for initial production.
+
+---
+
+## AD-SCALE-006 — Turso as Initial Database Provider
+
+Turso remains the initial production database provider.
+
+PostgreSQL remains the future migration target.
+
+---
+
+## AD-SCALE-007 — R2 for Independent Object Scaling
+
+Object storage is separated from application compute through Cloudflare R2.
+
+---
+
+## AD-SCALE-008 — Evidence-Based Provider Upgrades
+
+Infrastructure provider upgrades must be triggered by measured workload or required capabilities.
+
+---
+
+## AD-SCALE-009 — Progressive Scaling
+
+FluxDine will evolve from managed initial production toward more distributed architecture only when workload requires it.
+
+---
+
+# 31. Implementation Boundaries
+
+This document defines scaling architecture and policy.
+
+It does not authorize implementation of every future scaling capability described here.
+
+The following are architectural reservations rather than current implementation requirements:
+
+* distributed cache;
+* queue infrastructure;
+* dedicated workers;
+* database replicas;
+* PostgreSQL migration;
+* database partitioning;
+* multi-region deployment;
+* advanced traffic routing;
+* workload-specific services.
+
+Each future capability requires:
+
+1. workload justification;
+2. architecture review;
+3. security review;
+4. operational impact assessment;
+5. implementation specification;
+6. testing;
+7. deployment approval;
+8. monitoring;
+9. recovery validation.
+
+---
+
+# 32. Current Scaling Matrix
+
+| Component      | Current Technology | Current Scaling Model                   | Future Option                               |
+| -------------- | ------------------ | --------------------------------------- | ------------------------------------------- |
+| Application    | Next.js / Vercel   | Managed serverless scaling              | Dedicated services if justified             |
+| DNS            | Cloudflare DNS     | Managed DNS                             | Advanced routing if required                |
+| Database       | Turso              | Shared DB / shared schema               | PostgreSQL / advanced DB topology           |
+| Object Storage | Cloudflare R2      | Provider-managed scaling                | Additional storage architecture if required |
+| Email          | Resend             | Provider-managed scaling                | Async email workers if required             |
+| Monitoring     | Sentry             | Managed observability                   | Expanded telemetry                          |
+| Scheduled Jobs | Vercel Cron        | Managed scheduled execution             | Queue/worker system                         |
+| Cache          | None required      | Application/provider caching where safe | Distributed cache                           |
+| Queue          | None               | Direct execution where appropriate      | Durable queue                               |
+| Workers        | None               | Application/serverless execution        | Dedicated workers                           |
+| Load Balancer  | Provider-managed   | Vercel/Cloudflare platform              | Advanced routing                            |
+| Regions        | Provider-managed   | Initial provider architecture           | Multi-region                                |
+
+---
+
+# 33. Capacity Signals Matrix
+
+| Signal                        | What It Indicates                  | Initial Response                        |
+| ----------------------------- | ---------------------------------- | --------------------------------------- |
+| API latency increases         | Application or dependency pressure | Profile request path                    |
+| API errors increase           | Capacity or application failure    | Inspect logs and Sentry                 |
+| Database latency increases    | Query or DB pressure               | Optimize queries/indexes                |
+| Database grows rapidly        | Data-volume growth                 | Review storage and query patterns       |
+| R2 usage grows rapidly        | Object-storage growth              | Review lifecycle and capacity           |
+| Email volume increases        | Provider workload                  | Review rate limits and async delivery   |
+| Cron duration increases       | Scheduled workload growth          | Optimize or isolate workload            |
+| One tenant dominates workload | Noisy neighbor                     | Evaluate tenant controls                |
+| Vercel limits approached      | Hosting capacity                   | Optimize or evaluate plan               |
+| Turso constraints approached  | Database capacity                  | Optimize or evaluate provider evolution |
+
+---
+
+# 34. Scaling Decision Workflow
+
+Every significant scaling decision should answer:
+
+### 1. What is growing?
+
+Examples:
+
+* tenants;
+* restaurants;
+* orders;
+* requests;
+* database size;
+* storage;
+* email;
+* scheduled jobs.
+
+### 2. What is the actual bottleneck?
+
+The team must identify whether the constraint is:
+
+* application;
+* database;
+* storage;
+* provider;
+* scheduled workload;
+* external dependency;
+* tenant-specific workload.
+
+### 3. Can the current architecture be optimized?
+
+Optimization should be attempted before architectural expansion.
+
+### 4. Is the problem temporary or sustained?
+
+Short-lived spikes do not automatically justify permanent infrastructure.
+
+### 5. What is the smallest architectural change that resolves the problem?
+
+Prefer the simplest effective solution.
+
+### 6. Does the change affect tenant isolation?
+
+If yes, architecture and security review are required.
+
+### 7. Does the change affect recovery?
+
+If yes, backup and disaster recovery documentation must be updated.
+
+---
+
+# 35. Future Scaling Capabilities
+
+The following capabilities are intentionally reserved for future scale:
+
+## Application
+
+* workload-specific services;
+* advanced serverless optimization;
+* dedicated compute.
+
+## Database
+
+* PostgreSQL;
+* read scaling;
+* partitioning;
+* archival;
+* workload separation.
+
+## Background Processing
+
+* durable queues;
+* dedicated workers;
+* retry systems;
+* dead-letter queues.
+
+## Caching
+
+* distributed cache;
+* application-level cache;
+* edge caching.
+
+## Traffic
+
+* advanced routing;
+* regional routing;
+* multi-region execution.
+
+## Resilience
+
+* multi-region infrastructure;
+* multi-provider strategies;
+* advanced failover.
+
+None of these capabilities are required for initial production.
+
+---
+
+# 36. Operational Review
+
+Scaling architecture should be reviewed when any of the following occurs:
+
+* major increase in tenant count;
+* major increase in order volume;
+* major increase in API traffic;
+* database performance degradation;
+* storage growth beyond expected capacity;
+* scheduled workload growth;
+* provider limit warnings;
+* introduction of a queue;
+* introduction of a cache;
+* database provider migration;
+* significant change to hosting architecture;
+* material change to recovery requirements.
+
+---
+
+# 37. References
+
+This specification depends on and must remain consistent with:
+
+* FluxDine Core Architecture;
+* Security Architecture;
+* Deployment Specification;
+* Environment & Secrets Strategy;
+* Environment Variables;
+* CI/CD Pipeline;
+* Monitoring;
+* Logging;
+* Backup Strategy;
+* Disaster Recovery;
+* Database Architecture;
+* API Architecture;
+* Backend Architecture;
+* Frontend Architecture.
+
+Where a conflict exists, the FluxDine Architecture Bible and higher-authority architectural decisions take precedence.
+
+---
+
+# 38. Appendices
+
+## Appendix A — Initial Production Scaling Model
 
 ```text
-Multi-Region Active-Active
+                    Internet
+                       |
+                       v
+                Cloudflare DNS
+                       |
+                       v
+                    Vercel
+                       |
+              Next.js Application
+                       |
+          +------------+------------+
+          |                         |
+          v                         v
+       Turso                       R2
+     Database                Object Storage
+          |
+          +----------------------+
+          |
+          v
+    Shared Platform Services
+          |
+     +----+----+
+     |         |
+     v         v
+  Resend    Sentry
+```
 
-Global Load Balancing
+Scheduled workloads may execute through Vercel Cron.
 
-Edge Computing
+No dedicated queue, worker cluster, or distributed cache is required initially.
 
-Serverless Scaling
+---
 
-AI-assisted Auto Scaling
+## Appendix B — Scaling Priority Order
 
-Predictive Capacity Planning
-
-Cross-Cloud Scaling
-
-Autonomous Infrastructure Optimization
+```text
+1. Observe
+2. Measure
+3. Diagnose
+4. Optimize
+5. Re-measure
+6. Increase managed capacity
+7. Isolate heavy workloads
+8. Introduce asynchronous processing
+9. Introduce caching
+10. Evolve database architecture
+11. Consider multi-region architecture
 ```
 
 ---
 
-# References
+## Appendix C — Tenant Scaling Model
 
-- Deployment Specification
-- Monitoring
-- Cache Specification
-- Queue Specification
-- Disaster Recovery
-- Database Engineering Specifications
+```text
+FluxDine
+   |
+   +-- Tenant A
+   |     |
+   |     +-- Restaurant
+   |           |
+   |           +-- Branches
+   |
+   +-- Tenant B
+   |     |
+   |     +-- Restaurant
+   |           |
+   |           +-- Branches
+   |
+   +-- Tenant C
+         |
+         +-- Restaurant
+               |
+               +-- Branches
+```
+
+Scaling mechanisms must preserve these isolation boundaries.
+
+---
+
+## Appendix D — Current vs Future Infrastructure
+
+| Capability                | Initial Production |             Future |
+| ------------------------- | -----------------: | -----------------: |
+| Vercel Application        |                Yes |           Continue |
+| Turso                     |                Yes | Possible migration |
+| Shared DB / Shared Schema |                Yes |         May evolve |
+| Cloudflare DNS            |                Yes |           Continue |
+| Cloudflare R2             |                Yes |           Continue |
+| Resend                    |                Yes |           Continue |
+| Sentry                    |                Yes |           Continue |
+| Vercel Cron               |                Yes |         May evolve |
+| Distributed Cache         |                 No |           Possible |
+| Queue                     |                 No |           Possible |
+| Dedicated Workers         |                 No |           Possible |
+| Read Replicas             |                 No |           Possible |
+| PostgreSQL                |                 No |      Future target |
+| Multi-Region              |                 No |             Future |
+| Multi-Provider            |                 No |             Future |
+
+---
+
+## Appendix E — Scaling Review Checklist
+
+Before approving a significant scaling change:
+
+* [ ] Workload has been measured.
+* [ ] Bottleneck has been identified.
+* [ ] Existing architecture has been optimized.
+* [ ] Tenant isolation has been reviewed.
+* [ ] Security impact has been reviewed.
+* [ ] Data consistency impact has been reviewed.
+* [ ] Monitoring has been planned.
+* [ ] Backup/recovery impact has been reviewed.
+* [ ] Deployment impact has been reviewed.
+* [ ] Failure modes have been considered.
+* [ ] Provider limits have been considered.
+* [ ] Rollback/recovery approach is defined.
+* [ ] Architecture Decision Record has been created where required.
+
+---
+
+## Appendix F — Scaling Governance
+
+Scaling is not a one-time architecture activity.
+
+The platform must continuously evaluate whether its infrastructure remains appropriate for actual workload.
+
+The governing principle is:
+
+> Scale the simplest architecture that reliably satisfies the current workload.
+
+When the current architecture no longer satisfies measured requirements, FluxDine should evolve deliberately rather than prematurely.
 
 ---
 
 # Revision History
 
-| Version | Date | Author | Description |
-|----------|------|--------|-------------|
-| 1.0 | Initial Release | FluxDine Engineering | Approved as the authoritative Scaling Strategy specification for the FluxDine platform |
+| Version | Status              | Summary                                                                                                                                                                                                                                                                                            |
+| ------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.0     | Approved and Locked | Original generic scaling architecture specification                                                                                                                                                                                                                                                |
+| 1.1     | Pending Approval    | Reworked scaling strategy to reflect actual FluxDine infrastructure, managed Vercel execution, Turso shared database/shared schema, R2, Resend, Sentry, current scheduled workload model, evidence-driven scaling, tenant-aware scaling, and explicitly reserved future distributed infrastructure |
+
+```
