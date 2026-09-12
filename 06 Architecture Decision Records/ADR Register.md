@@ -83,6 +83,7 @@ ADR documents capture significant architectural decisions, their rationale, cons
 | ADR-052 | Architecture as AI Context | Accepted |
 | ADR-053 | Infrastructure Independence | Accepted |
 | ADR-054 | Independent Service Evolution | Accepted |
+| ADR-055 | Turso PITR and R2 Independent Database Backup Strategy | Accepted |
 
 ---
 
@@ -95,8 +96,8 @@ ADR documents capture significant architectural decisions, their rationale, cons
 | Security / Data | 5 |
 | Product Workflows | 10 |
 | Engineering / AI | 7 |
-| Infrastructure / Operations | 5 |
-| **Total ADRs** | **55** |
+| Infrastructure / Operations | 6 |
+| **Total ADRs** | **56** |
 
 ---
 
