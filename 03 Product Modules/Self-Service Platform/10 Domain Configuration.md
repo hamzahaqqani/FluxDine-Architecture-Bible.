@@ -12,7 +12,7 @@
 |--------|-------|
 | **Document ID** | FD-PM-SSP-010 |
 | **Document Name** | Domain Configuration |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Product & Engineering |
 | **Classification** | Internal Product Module Specification |
@@ -52,7 +52,7 @@ This specification is referenced by:
 | Status | Approved and Locked |
 | Approval | Approved |
 | Implementation | Architecture Complete |
-| Last Updated | TBD |
+| Last Updated | 2026-09-12 |
 
 ---
 
@@ -69,7 +69,17 @@ It provides:
 - SSL Readiness
 - Configuration Completion
 
-After launch, the Platform Infrastructure manages website hosting and SSL lifecycle.
+After launch, the application continues to use stored domain configuration for hostname mapping. Self-Service Domain Configuration **creates and updates application domain configuration records**. It does **not** automatically create DNS records, provision Cloudflare DNS, provision Vercel custom domains, provision SSL certificates, or verify external DNS automatically.
+
+Default restaurant domain architecture:
+
+```text
+{restaurant}.fluxdine.com
+```
+
+Custom domains remain architecture-supported. **Automation is deferred** (future implementation).
+
+Cloudflare is DNS only. Hostname → restaurant → tenant resolution is application-owned.
 
 ---
 
@@ -108,9 +118,8 @@ The Domain Configuration module shall:
 - Simplify domain setup.
 - Support platform-managed and custom domains.
 - Validate domain ownership.
-- Verify DNS configuration.
-- Prepare restaurants for public access.
-- Maintain separation from infrastructure management.
+- Prepare restaurants for public access using platform hostnames.
+- Maintain separation from DNS hosting and certificate automation (deferred).
 
 Domain configuration establishes the restaurant's public web identity before launch.
 
@@ -1442,7 +1451,7 @@ Domain Compliance Manager
 Zero-Touch Domain Provisioning
 ```
 
-These capabilities are outside the current implementation scope but are fully supported by the architectural direction of the FluxDine platform.
+These capabilities are **future** and outside Initial Production. They are not current Phase 07 requirements.
 
 ---
 
@@ -1467,4 +1476,5 @@ These capabilities are outside the current implementation scope but are fully su
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.1 | 2026-09-12 | FluxDine Product & Engineering | Current: application domain records and `{restaurant}.fluxdine.com`. Custom-domain/DNS/SSL automation deferred. |
 | 1.0 | Initial Release | FluxDine Product & Engineering | Approved as the authoritative Domain Configuration specification for the FluxDine Self-Service Platform |

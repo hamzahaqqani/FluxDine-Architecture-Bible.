@@ -1,7 +1,7 @@
 Document 04
 System Architecture Blueprint
 
-Version: 1.0
+Version: 1.1
 
 Status: ✅ LOCKED
 
@@ -23,20 +23,36 @@ External integrations
 
 This document serves as the master blueprint for all future development.
 
+Current vs future (Initial Production)
+
+Current Initial Production is a Next.js application on Vercel (`fluxdine-staging` occupies the Initial Production role), Turso Shared Database / Shared Schema, Cloudflare R2 for application files, Resend via Email Service, Sentry, Cloudflare DNS, and GitHub source control.
+
+Shared Platform Services below are **logical** application boundaries. They are not independently deployed microservices with separate databases, worker fleets, or Kubernetes in Initial Production.
+
+PostgreSQL, database-per-service, dedicated queues/workers/cache, Kubernetes, automatic custom-domain/DNS/SSL provisioning, and multi-region infrastructure remain **future** unless a later accepted ADR changes that.
+
+Database backup and recovery follow ADR-055 (Turso PITR + GitHub Actions logical dumps to a dedicated private R2 backup bucket). Vercel Cron is for application scheduled jobs, not database backups.
+
 1. High-Level Architecture
                     Internet
                         │
                         ▼
                 ┌────────────────┐
-                │  FluxDine DNS  │
+                │ Cloudflare DNS │
                 └────────────────┘
                         │
         ┌───────────────┼────────────────┐
         │               │                │
         ▼               ▼                ▼
 
- fluxdine.com    admin.fluxdine.com   restaurant.com
-(Self-Service)      (HQ Portal)       (Restaurant)
+signup.fluxdine.com  app.fluxdine.com   {restaurant}.fluxdine.com
+(Self-Service)         (HQ Portal)      (Restaurant platform)
+
+Canonical brand: fluxdine.com
+fluxdine.online redirects to fluxdine.com
+Custom restaurant domains: architecture-supported; automation deferred
+
+Cloudflare is DNS only. The application resolves hostname → restaurant → tenant.
 
         │               │                │
         └───────────────┼────────────────┘
@@ -71,16 +87,17 @@ This document serves as the master blueprint for all future development.
                         ▼
 
               Multi-Tenant Database
+              (Turso, Shared Schema)
 2. Platform Applications
 
-FluxDine consists of three independent applications that share a common platform.
+FluxDine consists of three logical applications that share a common platform. In Initial Production they are delivered as one Vercel-hosted application, not as separately deployed infrastructure per application.
 
 Application 1
 FluxDine HQ
 
 Domain
 
-admin.fluxdine.com
+app.fluxdine.com
 Users
 FluxDine Owner
 Super Admin
@@ -105,7 +122,7 @@ Self-Service Portal
 
 Domain
 
-fluxdine.com
+signup.fluxdine.com
 Responsibilities
 
 Marketing Website
@@ -131,11 +148,9 @@ Restaurant Platform
 
 Domains
 
-restaurant.com
+{restaurant}.fluxdine.com
 
-or
-
-restaurant.fluxdine.app
+Custom restaurant domains remain architecture-supported; automation is deferred.
 
 Users
 
@@ -230,11 +245,11 @@ Domain Service
 
 Responsibilities
 
-Domain Verification
-SSL
-DNS Validation
-Custom Domains
-Subdomains
+Domain configuration and mapping
+Hostname → restaurant → tenant resolution metadata
+Custom domain records (architecture-supported; provisioning automation deferred)
+DNS validation guidance (Cloudflare remains DNS host)
+SSL metadata where applicable (automatic SSL/custom-domain provisioning is not current Initial Production)
 Theme Service
 
 Responsibilities
@@ -455,11 +470,11 @@ Payment Service
 
 ↓
 
-Stripe / PayPal
+Payment gateway adapters (Stripe / PayPal when configured)
 
 ↓
 
-Order Database
+Shared Turso database (shared schema)
 
 ↓
 
@@ -478,9 +493,12 @@ Stripe
 PayPal
 Email
 
-Future providers:
+Current provider:
 
-Resend
+Resend (via Email Service)
+
+Future providers may include:
+
 SendGrid
 Amazon SES
 SMS
@@ -490,9 +508,12 @@ Future:
 Twilio
 File Storage
 
-Future:
+Current provider:
 
-Cloudflare R2
+Cloudflare R2 (application File Storage bucket, separate from ADR-055 database backup storage)
+
+Future providers may include:
+
 AWS S3
 Maps
 
@@ -552,12 +573,13 @@ without architectural redesign.
 
 Scalability will be achieved through:
 
-Stateless application servers
-Shared platform services
+Managed Vercel application execution
+Logical shared platform services (not separately deployed microservice infrastructure in Initial Production)
 Database indexing
 Caching (future)
-Background jobs
-Horizontal scaling
+Application scheduled jobs (current: Vercel Cron)
+Dedicated queues/workers (future, if justified)
+Horizontal scaling of the managed application platform
 11. Architectural Decisions Register
 ID	Decision	Status
 AD-001	Unified Identity System	✅ Locked
@@ -569,4 +591,4 @@ AD-006	Configuration over Custom Code	✅ Locked
 AD-007	Restaurant Platform is the Core Engine	✅ Locked
 12. Final Conclusion
 
-The System Architecture establishes FluxDine as a modular, service-oriented SaaS platform built around a single multi-tenant core. Rather than duplicating applications for each customer, every restaurant operates on the same platform while remaining logically isolated through tenant-aware services and data. The separation between applications (HQ, Self-Service, Restaurant Platform) and shared services ensures that the platform can evolve independently, integrate additional payment providers and third-party services, and scale to thousands of restaurants without requiring fundamental architectural changes.
+The System Architecture establishes FluxDine as a modular, service-oriented SaaS platform built around a single multi-tenant core. Rather than duplicating applications for each customer, every restaurant operates on the same platform while remaining logically isolated through tenant-aware services and data. The separation between applications (HQ, Self-Service, Restaurant Platform) and shared services is a **logical** boundary. Initial Production does not deploy each service as independent infrastructure with its own database. The platform can still evolve independently at the module/service-contract level, integrate additional providers, and scale on managed infrastructure without requiring a premature microservice, Kubernetes, or database-per-service topology.

@@ -10,7 +10,7 @@
 |--------|-------|
 | **Document ID** | FD-DS-006 |
 | **Document Name** | Git Workflow |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Engineering Team |
 | **Classification** | Development Standard |
@@ -38,55 +38,57 @@ Every contributor shall follow this workflow.
 
 # Git Strategy
 
-FluxDine adopts a **Trunk-Based Development** workflow with short-lived feature branches.
+FluxDine application development uses short-lived feature branches merged to the application mainline after review and CI.
 
-The primary branches are:
+This standard covers **two repositories** with **different mainline names**. They must not be collapsed into one branch name.
 
-- `main`
-- `develop`
+### Application repository
 
-Feature branches are temporary and merged after review.
+- Mainline: `master`
+- Workflow: feature branch → pull request → review → CI → merge to `master` → Vercel deployment
+- Production deployment authorization is governed by the Deployment Specification
+- Current Initial Production Vercel project: `fluxdine-staging` (role is Initial Production)
+
+### Architecture Bible repository
+
+- Mainline: `main`
+
+`develop` is **not** a required active branch for the application repository.
+
+This is not GitFlow. Long-lived `develop` / `release/*` integration branches are not required.
 
 ---
 
 # Branch Structure
 
-Standard branches include:
+Standard application branches include:
 
 ```text
-main
-
-develop
+master
 
 feature/*
 
 bugfix/*
 
 hotfix/*
-
-release/*
 ```
 
 Long-lived feature branches are discouraged.
+
+Architecture Bible changes use `main` in that repository.
 
 ---
 
 # Branch Purposes
 
-### main
+### master (application repository)
 
-- Production-ready code
+- Application mainline
 - Protected branch
-- Tagged releases only
+- Source of Vercel Initial Production deployments
 - No direct commits
 
----
-
-### develop
-
-- Integration branch
-- Latest stable development
-- Base for feature branches
+Architecture Bible production documentation uses `main` in the Architecture Bible repository.
 
 ---
 
@@ -131,20 +133,6 @@ hotfix/security-patch
 ```
 
 Used only for urgent production issues.
-
----
-
-### release/*
-
-Examples:
-
-```text
-release/v1.4.0
-
-release/v2.0.0
-```
-
-Used to prepare production releases.
 
 ---
 
@@ -265,13 +253,13 @@ Merge commits are discouraged unless justified.
 
 # Protected Branches
 
-The following branches shall be protected:
+The following application branch shall be protected:
 
 ```text
-main
-
-develop
+master
 ```
+
+The Architecture Bible mainline `main` shall be protected in that repository.
 
 Protected branches require:
 
@@ -299,39 +287,27 @@ Conflicts shall never be resolved by deleting functionality without review.
 
 # Release Workflow
 
-The standard workflow is:
+The standard **application** workflow is:
 
 ```text
 Feature Branch
-
-↓
-
+    ↓
 Pull Request
-
-↓
-
+    ↓
 Code Review
-
-↓
-
-Merge into Develop
-
-↓
-
-Release Branch
-
-↓
-
-Testing
-
-↓
-
-Merge into Main
-
-↓
-
-Production Release
+    ↓
+CI
+    ↓
+Merge into master
+    ↓
+Vercel deployment
+    ↓
+Initial Production (Vercel project fluxdine-staging)
 ```
+
+Production deployment authorization remains governed by the Deployment Specification.
+
+Preview deployments must not receive production secrets, including database backup secrets (ADR-055).
 
 ---
 
@@ -340,7 +316,7 @@ Production Release
 Production issues follow:
 
 ```text
-Main
+master
 
 ↓
 
@@ -356,14 +332,10 @@ Code Review
 
 ↓
 
-Merge into Main
-
-↓
-
-Merge into Develop
+Merge into master
 ```
 
-Hotfixes shall always be synchronized back into `develop`.
+Hotfixes shall be based on `master` and merged back to `master`. There is no required `develop` synchronization.
 
 ---
 
@@ -425,27 +397,29 @@ Repository maintenance shall be performed regularly.
 
 # Engineering Rules
 
-- Trunk-Based Development is the standard workflow.
-- Feature branches shall remain short-lived.
+- Short-lived feature branches are the standard application workflow.
+- Application mainline is `master`. Architecture Bible mainline is `main`.
+- `develop` is not a required application branch.
 - Direct commits to protected branches are prohibited.
 - Conventional Commits are mandatory.
 - Every Pull Request requires code review.
 - Automated testing shall pass before merging.
-- Production releases shall be tagged.
-- Hotfixes shall be merged back into `develop`.
+- Production releases should be tagged where release tagging is used.
+- Hotfixes merge to `master`.
 - Repository history shall remain clean and understandable.
+- Ordinary CI must not receive production backup secrets (ADR-055).
 - This document is the authoritative Git Workflow specification.
 
 ---
 
 # Architecture Decision Records
 
-- FluxDine adopts Trunk-Based Development.
+- FluxDine application development uses short-lived feature branches into `master`.
 - Conventional Commits standardize commit history.
 - Pull Requests are mandatory for all code changes.
 - Protected branches safeguard production stability.
-- Automated CI validation precedes code review.
-- Semantic Versioning governs production releases.
+- Automated CI validation precedes merge.
+- Semantic Versioning may govern tagged production releases.
 - Squash merging provides a clean Git history.
 - Repository hygiene is maintained through regular branch cleanup.
 - AI-generated code follows the same workflow as human-written code.
@@ -483,4 +457,5 @@ Repository maintenance shall be performed regularly.
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.1 | 2026-09-12 | FluxDine Engineering Team | Application mainline `master`; Architecture Bible `main`; removed required `develop`/GitFlow; Vercel Initial Production. |
 | 1.0 | Initial Release | FluxDine Engineering Team | Approved as the authoritative Git Workflow specification |

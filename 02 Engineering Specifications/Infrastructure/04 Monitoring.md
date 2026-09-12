@@ -1,6 +1,3 @@
-## `04 — Monitoring` — Version 1.1
-
-````markdown
 # 02 Engineering Specifications
 
 # Infrastructure
@@ -15,7 +12,7 @@
 |--------|-------|
 | **Document ID** | FD-ENG-INF-004 |
 | **Document Name** | Monitoring |
-| **Version** | 1.1 |
+| **Version** | 1.2 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Engineering |
 | **Classification** | Internal Engineering Specification |
@@ -126,14 +123,38 @@ FluxDine Application
         └──────────────→ Turso
                            │
                            └── Database Health
-````
+```
 
 Additional provider-specific monitoring may be used for:
 
-* Cloudflare R2
+* Cloudflare R2 (application storage and, separately, database backup objects)
 * Resend
+* Cloudflare DNS (availability of DNS, not tenant identity)
+* Vercel Cron (application scheduled jobs, e.g. reservation automation)
+* GitHub Actions (ADR-055 database backup workflow)
 * Future payment providers
 * Future infrastructure services
+
+Kubernetes, VM fleets, dedicated queue/worker metrics, Redis metrics, and host-CPU infrastructure monitoring are **future** categories. They are not current Initial Production monitoring requirements.
+
+---
+
+# Database Backup Monitoring (ADR-055)
+
+Database backup is operational infrastructure. Monitoring shall observe, without exposing secrets or tenant payload data:
+
+- Backup execution (scheduled GitHub Actions run occurred)
+- Backup success / partial failure / failure
+- Backup verification (object exists, size/metadata, checksum where practical)
+- Backup age (time since last **successful verified** dump)
+- Backup retention (successful verified copies covering at least 30 days)
+- Quarterly restore-test status
+
+A backup object that exists but failed verification is not a successful backup.
+
+Vercel Hobby Cron is **not** the database backup runner and must not be the sole signal that database recovery copies exist.
+
+This specification does not implement alerts. Alerting design shall use these signals.
 
 ---
 
@@ -1018,6 +1039,7 @@ These capabilities shall not be considered implemented until separately designed
 * Disaster Recovery
 * Scaling Strategy
 * Security Architecture
+* ADR-055 — Turso PITR and R2 Independent Database Backup Strategy
 
 ---
 
@@ -1026,6 +1048,7 @@ These capabilities shall not be considered implemented until separately designed
 | Version | Date             | Author               | Description                                                                                                    |
 | ------- | ---------------- | -------------------- | -------------------------------------------------------------------------------------------------------------- |
 | 1.0     | Initial Release  | FluxDine Engineering | Initial Monitoring specification                                                                               |
+| 1.2     | 2026-09-12 | FluxDine Engineering | ADR-055 backup monitoring signals; labeled k8s/queue/Redis metrics as future; removed wrapping fences. |
 | 1.1     | Approved and Locked | FluxDine Engineering | Aligned monitoring architecture with current Vercel, Sentry, Turso, R2, Resend, and Vercel Cron infrastructure |
 
-```
+---

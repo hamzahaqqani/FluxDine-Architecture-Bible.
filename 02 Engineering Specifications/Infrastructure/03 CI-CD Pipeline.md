@@ -1,6 +1,3 @@
-### `03 CI-CD Pipeline.md` — Version 1.1
-
-````markdown
 # 02 Engineering Specifications
 
 # Infrastructure
@@ -15,7 +12,7 @@
 |--------|-------|
 | **Document ID** | FD-ENG-INF-003 |
 | **Document Name** | CI/CD Pipeline |
-| **Version** | 1.1 |
+| **Version** | 1.2 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Engineering |
 | **Classification** | Internal Engineering Specification |
@@ -168,20 +165,16 @@ Pull Request
     ↓
 Code Review
     ↓
-Merge to master
-    ↓
 CI / Validation
     ↓
-Build
+Merge to master
     ↓
-Deployment
-    ↓
-Vercel
+Vercel build / deployment
     ↓
 FluxDine Initial Production
     ↓
 Post-Deployment Verification
-````
+```
 
 The current Initial Production deployment is hosted by the Vercel project:
 
@@ -190,6 +183,20 @@ fluxdine-staging
 ```
 
 The project name reflects the current Vercel project naming and does not mean that it is the future operational Staging environment.
+
+Preview deployments must not receive production secrets, including production Turso credentials, application R2 credentials, or database backup credentials.
+
+Production-impacting deployments require explicit authorization according to the Deployment Specification.
+
+Database migrations are related to deployment but independently governed.
+
+## Database backup workflow (operational, not PR CI)
+
+Per **ADR-055**, the twice-daily Turso logical dump to dedicated private R2 is a GitHub Actions **operational** workflow.
+
+- It is separate from ordinary pull-request CI.
+- Ordinary CI must not receive production backup secrets.
+- This specification does not define the workflow YAML.
 
 ---
 
@@ -1151,6 +1158,7 @@ These capabilities shall not be considered implemented until separately designed
 * Disaster Recovery
 * Scaling Strategy
 * Database Migration Strategy
+* ADR-055 — Turso PITR and R2 Independent Database Backup Strategy
 
 ---
 
@@ -1160,5 +1168,6 @@ These capabilities shall not be considered implemented until separately designed
 | ------- | ---------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1.0     | Initial Release  | FluxDine Engineering | Initial CI/CD specification                                                                                                                                                               |
 | 1.1     | Approved and Locked | FluxDine Engineering | Aligned CI/CD architecture with current GitHub/Vercel/Turso deployment model, Initial Production environment, production approval, migration separation, and future environment evolution |
+| 1.2     | 2026-09-12 | FluxDine Engineering | PR CI before merge to `master`; Preview isolation; ADR-055 backup workflow separate from ordinary CI; removed wrapping fences. |
 
-```
+---

@@ -10,13 +10,13 @@
 | ------------------------------ | --------------------------- |
 | **Document ID**                | FD-ARCH-008                 |
 | **Document Name**              | Infrastructure Architecture |
-| **Version**                    | **1.0**                     |
+| **Version**                    | **1.1**                     |
 | **Status**                     | **🔒 LOCKED**               |
 | **Classification**             | Internal                    |
 | **Owner**                      | FluxDine Architecture Team  |
 | **Architecture Bible Version** | 1.0                         |
 | **Created**                    | 2026-07-31                  |
-| **Last Updated**               | 2026-07-31                  |
+| **Last Updated**               | 2026-09-12                  |
 
 ---
 
@@ -58,7 +58,7 @@ This document serves as the architectural foundation for:
 | Property                      | Value                 |
 | ----------------------------- | --------------------- |
 | Current Status                | 🔒 LOCKED             |
-| Version                       | 1.0                   |
+| Version | 1.1 |
 | Approval                      | Approved              |
 | Architecture Decision Records | AD-079 through AD-102 |
 | Implementation Status         | Architecture Complete |
@@ -78,6 +78,38 @@ This document intentionally defines infrastructure architecture rather than impl
 Any architectural modification affecting the infrastructure architecture of the platform must follow the Architecture Governance process through an RFC, ADR, and Architecture Bible update before implementation.
 
 This document is the authoritative architectural specification governing infrastructure across the entire FluxDine platform.
+
+---
+
+# Current Initial Production Infrastructure
+
+This core document remains provider-independent at the *principle* level. Current Initial Production providers and topology are:
+
+| Capability | Current |
+|---|---|
+| Source control | GitHub (application mainline `master`) |
+| Application hosting | Vercel project `fluxdine-staging` (**Initial Production** role) |
+| Database | Turso, Shared Database / Shared Schema |
+| Application object storage | Cloudflare R2 (`fluxdine-staging` bucket) |
+| Database backup storage | Dedicated private R2 bucket (ADR-055); not the application File Storage bucket |
+| Email | Resend via Email Service |
+| Observability | Sentry; Vercel and Turso operational signals |
+| DNS | Cloudflare DNS only. Application resolves hostname → restaurant → tenant |
+| Application scheduled jobs | Vercel Cron (Hobby currently once daily) |
+| Database backup runner | GitHub Actions twice daily (ADR-055) |
+
+PostgreSQL is a future migration target. Database-per-service is not Initial Production topology (ADR-003 is historical).
+
+The following are **future** infrastructure, not current production:
+
+- Kubernetes / container orchestration fleets
+- VM fleets and dedicated load-balancer fleets
+- Dedicated worker clusters, distributed queues, Redis/distributed cache
+- Multi-region application/database topology
+- Automatic DNS/SSL/custom-domain provisioning
+- Terraform or other IaC **required** solely for database backups
+
+Detailed backup/recovery mechanism: **ADR-055**. Engineering detail: Deployment Specification, Backup Strategy, Disaster Recovery.
 
 ---
 
@@ -1898,6 +1930,7 @@ Define infrastructure terminology used throughout this document, including:
 
 | Version | Date       | Author                     | Description                                                                      |
 | ------- | ---------- | -------------------------- | -------------------------------------------------------------------------------- |
+| 1.1     | 2026-09-12 | FluxDine Architecture Team | Recorded current Initial Production providers (Vercel, Turso, R2, Resend, Sentry, Cloudflare DNS, GitHub) and classified Kubernetes/queues/Postgres/multi-region as future. ADR-055 for backups. |
 | 1.0     | 2026-07-31 | FluxDine Architecture Team | Initial approved and locked release of the Infrastructure Architecture document. |
 
 ---

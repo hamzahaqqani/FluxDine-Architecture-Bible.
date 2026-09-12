@@ -179,21 +179,21 @@ All required shared capabilities operate through approved service boundaries.
 
 ## Objective
 
-Establish production-grade operational infrastructure.
+Harden production-grade operational infrastructure for the **current** Initial Production platform.
+
+This is Phase 07 work: operate and complete Vercel + Turso + R2 + Resend + Sentry + Cloudflare DNS. It is **not** a PostgreSQL cutover, Kubernetes introduction, database-per-service migration, custom DNS automation program, multi-region build, or dedicated worker/queue/cache platform.
 
 ## Includes
 
-- Production environments
-- Deployment
-- Databases
-- Storage
-- DNS
-- TLS
-- Monitoring
-- Logging
-- Backups
-- Disaster recovery
-- Scheduled processing
+- Initial Production operation (`fluxdine-staging` Vercel project)
+- Deployment and secrets isolation
+- Turso shared database / shared schema
+- Application R2 storage plus dedicated private R2 database backups (ADR-055)
+- Cloudflare DNS (hostname → restaurant → tenant remains application-owned)
+- TLS as provided by the current hosting/DNS model (automatic custom-domain SSL automation deferred)
+- Monitoring and logging
+- Database backup and disaster recovery per ADR-055
+- Application scheduled processing (Vercel Cron) distinct from database backup (GitHub Actions)
 
 ## Exit Criteria
 

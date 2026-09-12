@@ -12,7 +12,7 @@
 |--------|-------|
 | **Document ID** | FD-ENG-BE-005 |
 | **Document Name** | Queue Specification |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Engineering |
 | **Classification** | Internal Engineering Specification |
@@ -64,7 +64,23 @@ This document defines the Queue architecture used throughout the FluxDine platfo
 
 Queues provide reliable asynchronous processing by decoupling producers from consumers, improving scalability, resilience, throughput, and fault tolerance.
 
-This document serves as the authoritative specification for queue-based processing.
+This document serves as the authoritative specification for **future** queue-based processing and for the logical queue concepts used by platform services.
+
+## Current vs future
+
+**Current (Initial Production):**
+
+- No dedicated distributed queue infrastructure is required.
+- No dedicated queue workers, Redis, Kafka, or worker clusters.
+- Application scheduled work uses currently implemented mechanisms (Vercel Cron for jobs such as reservation status automation; Hobby currently once daily).
+- Database backups are **not** a queue workload. They follow ADR-055 (GitHub Actions twice-daily dumps to dedicated private R2).
+
+**Future:**
+
+- A dedicated queue/worker architecture may be introduced if scale or reliability requirements justify it.
+- The remainder of this specification describes that future queue architecture and remains valid as the target engineering model.
+
+Do not treat the diagrams below as currently deployed infrastructure.
 
 ---
 
@@ -730,4 +746,5 @@ fraud.detection
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.1 | 2026-09-12 | FluxDine Engineering | Distinguished Initial Production (no dedicated queue) from future queue/worker architecture; ADR-055 backups are not a queue. |
 | 1.0 | Initial Release | FluxDine Engineering | Approved as the authoritative Queue Specification for the FluxDine platform |

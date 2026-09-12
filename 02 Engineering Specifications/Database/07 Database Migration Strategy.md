@@ -12,8 +12,8 @@
 |--------|-------|
 | **Document ID** | FD-ENG-DB-007 |
 | **Document Name** | Database Migration Strategy |
-| **Version** | 1.0 |
-| **Status** | Draft |
+| **Version** | 1.2 |
+| **Status** | Approved and Locked |
 | **Owner** | FluxDine Engineering |
 | **Classification** | Internal Engineering Specification |
 | **Depends On** | 00 Database Naming Standards<br>01 Complete Database Schema Specification<br>02 Table Specifications<br>03 Relationships<br>04 Constraints<br>05 Index Specification<br>06 Enum Specification |
@@ -51,10 +51,10 @@ Migration implementations, deployment pipelines, and release processes shall con
 
 | Item | Value |
 |------|-------|
-Status: Approved & Locked
-Approval: Approved
-Implementation: Architecture Complete
-| Last Updated | TBD |
+| Status | Approved and Locked |
+| Approval | Approved |
+| Implementation | Architecture Complete |
+| Last Updated | 2026-09-12 |
 
 ---
 
@@ -64,7 +64,7 @@ The purpose of this document is to define the engineering strategy governing the
 
 Database migrations provide a controlled mechanism for introducing schema changes, data transformations, performance improvements, and operational enhancements while preserving data integrity, tenant isolation, and application availability.
 
-This document defines the logical migration strategy independent of any specific migration tool or database engine.
+This document defines the logical migration strategy. Current Initial Production uses **Turso** with **Shared Database / Shared Schema**. PostgreSQL is a future migration target, not the current production engine. Database-per-service is not the Initial Production topology (ADR-003 remains historical and is not rewritten here).
 
 ---
 
@@ -152,7 +152,21 @@ Business data shall be preserved throughout every migration unless explicitly ap
 
 ## Principle 6 — Technology Independence
 
-Migration strategies remain independent of implementation technologies.
+Migration strategies remain independent of implementation technologies at the *design* level. Current execution uses Turso/libSQL and Drizzle. PostgreSQL syntax is not the current production migration dialect.
+
+---
+
+## Principle 7 — Shared Schema and Tenant Safety
+
+Migrations apply to the shared schema used by all tenants. They must remain tenant-aware: they must not leak, mix, or strip tenant context, and they must not assume a database-per-service layout.
+
+---
+
+## Principle 8 — Application and Recovery Compatibility
+
+A migration changes the point-in-time combination of schema, data, and migration state. Application rollback and database restore are separate operations (ADR-055).
+
+Restoring a historical backup requires the compatible application version or a controlled **forward** migration. Never migrate a restored database backward. Manifests for database dumps should record migration/application identity where available.
 
 ---
 
@@ -2369,6 +2383,7 @@ This specification should be read together with the following FluxDine Architect
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.2 | 2026-09-12 | FluxDine Engineering | Current engine Turso shared schema; restore/application compatibility; ADR-055; fixed Document Status table. |
 | 1.1 | Final Lock | FluxDine Engineering | Document reviewed, standardized, approved, and locked as the authoritative Database Migration Strategy specification. |
 | 0.1 | Initial Draft | FluxDine Engineering | Document structure established |
 | 0.5 | Migration Strategy | FluxDine Engineering | Migration architecture, schema, data, seed, deployment, rollback, and synchronization strategy completed |

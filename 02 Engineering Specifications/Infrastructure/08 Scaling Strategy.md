@@ -12,7 +12,7 @@
 |---|---|
 | Document ID | FD-ENG-INF-008 |
 | Document Name | Scaling Strategy |
-| Version | 1.1 |
+| Version | 1.2 |
 | Status | Approved and Locked |
 | Classification | Engineering Specification |
 | Architecture Area | Infrastructure |
@@ -115,7 +115,8 @@ The initial architecture is intentionally simple:
 - Cloudflare R2 provides object storage;
 - Resend provides email delivery;
 - Sentry provides application error monitoring and observability;
-- scheduled workloads use the available Vercel Cron capability;
+- scheduled application workloads use the available Vercel Cron capability (Hobby currently once daily; this is **not** the database backup scheduler);
+- database backups follow ADR-055 (GitHub Actions, twice-daily logical dumps to a dedicated private R2 bucket);
 - no dedicated distributed cache is required initially;
 - no dedicated queue is required initially;
 - no dedicated worker cluster is required initially;
@@ -1644,5 +1645,6 @@ When the current architecture no longer satisfies measured requirements, FluxDin
 | ------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1.0     | Approved and Locked | Original generic scaling architecture specification                                                                                                                                                                                                                                                |
 | 1.1     | Pending Approval    | Reworked scaling strategy to reflect actual FluxDine infrastructure, managed Vercel execution, Turso shared database/shared schema, R2, Resend, Sentry, current scheduled workload model, evidence-driven scaling, tenant-aware scaling, and explicitly reserved future distributed infrastructure |
+| 1.2     | 2026-09-12          | Clarified Vercel Cron is for application jobs; database backups are ADR-055 GitHub Actions, not Hobby Cron. |
 
-```
+---
