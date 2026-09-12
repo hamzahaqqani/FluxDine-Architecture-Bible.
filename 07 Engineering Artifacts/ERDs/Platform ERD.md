@@ -4,9 +4,9 @@
 
 This ERD represents the platform-level entities responsible for identity, tenants, restaurant ownership, domains, themes, subscriptions, feature flags, and platform administration.
 
-The diagram represents logical ownership rather than a single physical database.
+The diagram represents logical ownership. Current Initial Production stores these entities in the **Turso Shared Database / Shared Schema**. Each service does **not** own a separate physical database.
 
-FluxDine follows the Database-per-Service architecture. Each service owns its own database.
+Database-per-Service (ADR-003) is historical. This ERD is the current logical model on a shared physical database.
 
 ```mermaid
 erDiagram
@@ -133,4 +133,4 @@ erDiagram
 | Feature Flags | Feature Flag Service |
 | Audit Events | Audit Service |
 
-These relationships represent logical relationships only. Services shall not directly access another service's database.
+These relationships represent logical relationships only. Services shall not bypass published APIs to read or write another service's owned tables. Shared schema is not unrestricted cross-module access.

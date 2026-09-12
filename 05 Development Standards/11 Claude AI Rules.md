@@ -10,7 +10,7 @@
 |--------|-------|
 | **Document ID** | FD-DS-011 |
 | **Document Name** | Claude AI Rules |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Engineering Team |
 | **Classification** | AI Development Standard |
@@ -52,11 +52,17 @@ Claude AI shall:
 
 - Follow Clean Architecture.
 - Follow Feature-First Architecture.
-- Follow Database-per-Service architecture.
-- Follow Shared Platform Services architecture.
-- Follow Event-Driven Architecture.
+- Follow current Initial Production persistence: **Turso, Shared Database, Shared Schema**.
+- Treat ADR-003 Database-per-Service as **historical**. Do not generate per-service physical databases or PostgreSQL as current.
+- PostgreSQL / Database-per-Service only if a **future** accepted ADR explicitly requires them.
+- Follow Shared Platform Services as logical ownership boundaries.
+- Follow Event-Driven Architecture where applicable without requiring a dedicated broker for Initial Production.
 - Respect service boundaries.
 - Respect dependency direction.
+
+Inspect existing schema before proposing migrations. Do not generate architecture from the old Database-per-Service requirement.
+
+Shared schema is not unrestricted cross-tenant or cross-module access.
 
 Architectural consistency takes precedence over implementation convenience.
 
@@ -145,13 +151,13 @@ Documentation shall remain concise, accurate, and consistent.
 
 Claude AI shall:
 
-- Respect Database-per-Service architecture.
-- Preserve repository boundaries.
+- Persist through the shared Turso schema, not a separate database per logical service.
+- Preserve repository and module boundaries.
 - Use migrations for schema evolution.
 - Maintain tenant isolation.
 - Avoid duplicate persistence models.
 
-Direct database access between services is prohibited.
+Direct persistence bypass of another service's owned tables is prohibited. Shared schema does not authorize cross-tenant reads or writes.
 
 ---
 
@@ -250,7 +256,7 @@ Claude AI shall never:
 - Ignore the Architecture Bible.
 - Duplicate business logic.
 - Bypass repositories.
-- Modify another service's database.
+- Modify another service's owned tables by bypassing published APIs.
 - Hardcode secrets.
 - Remove security controls.
 - Break tenant isolation.
@@ -336,4 +342,5 @@ If conflicting implementation approaches exist, Claude AI shall:
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.1 | 2026-09-12 | FluxDine Engineering Team | Current DB: Turso Shared Database / Shared Schema. ADR-003 historical. PostgreSQL/Database-per-Service only if a future ADR requires them. |
 | 1.0 | Initial Release | FluxDine Engineering Team | Approved as the authoritative Claude AI Rules specification |

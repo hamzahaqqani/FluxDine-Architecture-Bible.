@@ -10,7 +10,7 @@
 |--------|-------|
 | **Document ID** | FD-DS-004 |
 | **Document Name** | Database Standards |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Engineering Team |
 | **Classification** | Development Standard |
@@ -33,42 +33,70 @@ The objectives are to ensure:
 - Reliability
 - Multi-Tenant Support
 
-Every database shall comply with these standards.
+Every schema and migration shall comply with these standards.
 
 ---
 
 # Database Philosophy
 
-FluxDine follows a **Database-per-Service** architecture.
+Initial Production uses:
 
-Each platform service owns its own database.
+```text
+Turso
+Shared Database
+Shared Schema
+```
 
-Examples:
+Logical platform services retain **ownership** of their domain data (rules, access, lifecycle). Physical persistence is the shared Turso schema.
 
-- Identity Database
-- Tenant Database
-- Restaurant Database
-- Commerce Database
-- Billing Database
-- Payment Database
+```text
+Multiple logical services
+        ↓
+Shared Database
+        ↓
+Shared Schema
+```
 
-Direct database access between services is prohibited.
+This is **not**:
+
+```text
+Multiple logical services
+        ↓
+Separate physical databases
+```
+
+Database-per-Service (ADR-003) is **historical**. It is not mandatory for Initial Production. It may be reconsidered only as a **future** evolution under a new accepted ADR.
+
+PostgreSQL is a **future** migration target, not the current production database.
+
+Developers shall implement:
+
+- tenant-aware queries
+- authorization boundaries
+- schema constraints
+- ownership checks
+- indexed tenant/restaurant/branch scoping
+- versioned migrations
+- logical service/module ownership boundaries
+
+Developers shall **not** assume each logical service has its own physical database.
+
+Direct persistence bypass of another service's owned tables is prohibited. Shared schema is not unrestricted cross-module or cross-tenant access.
 
 ---
 
 # Supported Database
 
-The primary production database is:
+The current Initial Production database is:
 
-- PostgreSQL
+- Turso (libSQL / SQLite dialect)
 
 Development tools include:
 
 - Drizzle ORM
 - Drizzle Kit
-- PostgreSQL Extensions (where approved)
 
-Alternative databases require architectural approval.
+PostgreSQL is not the current production database. Alternative engines require architectural approval.
 
 ---
 
@@ -342,12 +370,13 @@ Recovery procedures shall be documented and periodically validated.
 
 # Engineering Rules
 
-- PostgreSQL is the standard production database.
-- Database-per-Service architecture is mandatory.
+- Turso Shared Database / Shared Schema is the current Initial Production persistence model.
+- Database-per-Service is not mandatory in Initial Production (ADR-003 is historical).
+- PostgreSQL is a future migration target, not current production.
 - UUIDs shall be used for business entity identifiers.
 - Tables shall use snake_case naming.
 - Tenant isolation is mandatory.
-- Foreign key constraints shall be enforced.
+- Foreign key constraints shall be enforced where the engine supports them.
 - Database changes require version-controlled migrations.
 - Manual production schema changes are prohibited.
 - Sensitive data shall be protected through encryption and access controls.
@@ -358,15 +387,16 @@ Recovery procedures shall be documented and periodically validated.
 
 # Architecture Decision Records
 
-- PostgreSQL is the standard relational database platform.
-- Database-per-Service architecture enforces service ownership.
+- Current Initial Production database is Turso with Shared Database / Shared Schema.
+- ADR-003 Database-per-Service remains a historical record and is not rewritten here; physical per-service databases are not current.
+- Logical service ownership of domain data remains mandatory.
 - Drizzle ORM is the standard persistence framework.
-- UUIDs improve scalability and distributed system compatibility.
+- UUIDs improve identifier stability.
 - Schema evolution occurs exclusively through migrations.
-- Soft deletion preserves historical business records.
+- Soft deletion preserves historical business records where used.
 - Database constraints complement application validation.
-- Tenant isolation is enforced at both the application and database layers.
-- Future database technologies may complement PostgreSQL where justified but shall not violate architectural principles.
+- Tenant isolation is enforced at application and data-access layers.
+- PostgreSQL may be adopted later as a migration target without weakening tenant isolation or logical service ownership.
 - This document is the authoritative Database Standards specification.
 
 ---
@@ -401,4 +431,5 @@ Recovery procedures shall be documented and periodically validated.
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.1 | 2026-09-12 | FluxDine Engineering Team | Current persistence: Turso Shared Database / Shared Schema. PostgreSQL and Database-per-Service are not current Initial Production. Tenant isolation and logical service ownership preserved. |
 | 1.0 | Initial Release | FluxDine Engineering Team | Approved as the authoritative Database Standards specification |

@@ -11,7 +11,7 @@
 |--------|-------|
 | **Document ID** | FD-SPS-005 |
 | **Document Name** | Commerce Service |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Platform Architecture Team |
 | **Classification** | Core Platform Service |
@@ -221,7 +221,7 @@ The Commerce Service shall support:
 - Discounts, promotions, taxes, and service charges shall never be calculated by client applications.
 - The Commerce Service shall never execute payment transactions.
 - Payment authorization belongs exclusively to the Payment Service.
-- Commerce data shall never be modified through another service's database.
+- Commerce data shall never be modified by bypassing Commerce Service APIs.
 - Commerce lifecycle changes shall publish domain events.
 - Every commerce operation shall generate an audit record.
 - Commerce APIs shall remain backward compatible.
@@ -238,7 +238,7 @@ The Commerce Service shall support:
 - Discounts and promotions are evaluated within the Commerce Service.
 - Order creation precedes payment authorization.
 - Commerce events are published through the shared Event Bus.
-- Commerce data follows the Database-per-Service architecture.
+- Commerce data is logically owned by the Commerce Service and persists in the Initial Production Turso Shared Database / Shared Schema. Logical ownership does not imply a separate physical database.
 - Future pricing strategies shall extend the Pricing Engine without changing service ownership.
 - Payment execution remains delegated to the Payment Service.
 - This document is the authoritative Commerce Service specification.
@@ -277,5 +277,6 @@ The Commerce Service shall support:
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.1 | 2026-09-12 | FluxDine Platform Architecture Team | Logical commerce ownership on Turso Shared Database / Shared Schema. |
 | 1.0 | Initial Release | FluxDine Platform Architecture Team | Approved as the authoritative Commerce Service specification |
 ````

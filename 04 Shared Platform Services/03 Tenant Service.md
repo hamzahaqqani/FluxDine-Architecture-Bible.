@@ -18,7 +18,7 @@ Tenant Service
 
 Version
 
-1.0
+1.1
 
 Status
 
@@ -663,19 +663,21 @@ A failed event must not result in an invalid tenant lifecycle state.
 
 Database Ownership
 
-The Tenant Service follows the Database-per-Service architecture.
+The Tenant Service logically owns tenant lifecycle data.
 
-Its tenant database is exclusively owned by the Tenant Service.
+In Initial Production that data persists in the Turso Shared Database / Shared Schema. There is no separate Tenant Service physical database.
+
+ADR-003 Database-per-Service is historical.
 
 No other service may:
 
-Query the Tenant Service database directly.
+Query Tenant-owned tables directly.
 
 Write directly to Tenant tables.
 
 Modify Tenant Service records outside approved interfaces.
 
-Depend on internal Tenant database schemas.
+Depend on internal Tenant table schemas.
 
 Cross-service interaction must occur through:
 
@@ -922,7 +924,7 @@ Tenant Service must not implement payment processing.
 
 Tenant Service must not implement restaurant operational logic.
 
-Tenant Service must not directly access another service's database.
+Tenant Service must not directly access another service's owned tables.
 
 Other services must not directly modify Tenant Service data.
 
@@ -972,7 +974,7 @@ Tenant events are published through the shared Event Bus.
 
 Tenant data follows the approved database ownership model.
 
-Cross-service database access is prohibited.
+Cross-service persistence bypass is prohibited. Shared schema is not unrestricted cross-module access.
 
 Tenant authorization must be enforced server-side.
 
@@ -1082,6 +1084,14 @@ Date
 Author
 
 Description
+
+1.1
+
+2026-09-12
+
+FluxDine Platform Architecture Team
+
+Logical tenant ownership on Turso Shared Database / Shared Schema. ADR-003 historical.
 
 1.0
 

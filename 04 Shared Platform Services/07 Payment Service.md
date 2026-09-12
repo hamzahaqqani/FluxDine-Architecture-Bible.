@@ -10,7 +10,7 @@
 |--------|-------|
 | **Document ID** | FD-SPS-007 |
 | **Document Name** | Payment Service |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Platform Architecture Team |
 | **Classification** | Core Platform Service |
@@ -225,7 +225,7 @@ The Payment Service shall support:
 - Payment gateway implementations shall never exist inside the Payment Service.
 - Payment credentials shall never be stored within the Payment Service.
 - Refund processing belongs exclusively to the Payment Service.
-- Payment data shall never be modified through another service's database.
+- Payment data shall never be modified by bypassing Payment Service APIs.
 - Payment lifecycle changes shall publish domain events.
 - Every payment operation shall generate an audit record.
 - Payment APIs shall remain backward compatible.
@@ -242,7 +242,7 @@ The Payment Service shall support:
 - Payment execution is independent from subscription billing.
 - Commerce initiates payment but does not execute payment.
 - Payment events are published through the shared Event Bus.
-- Payment data follows the Database-per-Service architecture.
+- Payment data is logically owned by the Payment Service and persists in the Initial Production Turso Shared Database / Shared Schema. Logical ownership does not imply a separate physical database.
 - Future payment providers shall integrate through the Payment Framework without modifying the Payment Service.
 - PCI-sensitive responsibilities remain outside the Payment Service whenever possible.
 - This document is the authoritative Payment Service specification.
@@ -281,4 +281,5 @@ The Payment Service shall support:
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.1 | 2026-09-12 | FluxDine Platform Architecture Team | Logical payment ownership on Turso Shared Database / Shared Schema. |
 | 1.0 | Initial Release | FluxDine Platform Architecture Team | Approved as the authoritative Payment Service specification |

@@ -10,7 +10,7 @@
 |--------|-------|
 | **Document ID** | FD-SPS-010 |
 | **Document Name** | Analytics Service |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Platform Architecture Team |
 | **Classification** | Core Platform Service |
@@ -221,7 +221,7 @@ The Analytics Service shall support:
 - Analytics shall be generated from published events and approved service APIs.
 - Business reports shall never modify operational data.
 - Historical analytics shall remain immutable after aggregation unless corrected through approved reconciliation processes.
-- Analytics data shall never be modified through another service's database.
+- Analytics data shall never be modified by bypassing Analytics Service APIs.
 - Analytics lifecycle changes shall publish domain events.
 - Every analytics operation shall generate an audit record.
 - Analytics APIs shall remain backward compatible.
@@ -238,7 +238,7 @@ The Analytics Service shall support:
 - Dashboards consume aggregated data rather than operational databases.
 - Historical analytics is optimized for reporting workloads.
 - Analytics events are published through the shared Event Bus.
-- Analytics data follows the Database-per-Service architecture.
+- Analytics data is logically owned by the Analytics Service and persists in the Initial Production Turso Shared Database / Shared Schema. Logical ownership does not imply a separate physical database. Aggregates remain distinct from operational writes even when they share the same physical database.
 - Future AI and predictive analytics capabilities shall extend this service without changing ownership boundaries.
 - Monitoring metrics remain separate from business analytics.
 - This document is the authoritative Analytics Service specification.
@@ -278,4 +278,5 @@ The Analytics Service shall support:
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.1 | 2026-09-12 | FluxDine Platform Architecture Team | Logical analytics ownership on Turso Shared Database / Shared Schema. |
 | 1.0 | Initial Release | FluxDine Platform Architecture Team | Approved as the authoritative Analytics Service specification |

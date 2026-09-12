@@ -10,7 +10,7 @@
 |--------|-------|
 | **Document ID** | FD-SPS-017 |
 | **Document Name** | File Storage Service |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Platform Architecture Team |
 | **Classification** | Core Platform Service |
@@ -222,11 +222,11 @@ The File Storage Service shall support:
 # Engineering Rules
 
 - The File Storage Service is the single source of truth for file storage metadata.
-- Binary assets shall never be stored directly within business service databases.
+- Binary assets shall never be stored as BLOBs in the shared business schema.
 - File uploads shall be validated before storage.
 - Secure access shall use temporary signed URLs whenever possible.
 - Storage providers shall be abstracted behind a provider interface.
-- File metadata shall never be modified through another service's database.
+- File metadata shall never be modified by bypassing File Storage Service APIs.
 - File lifecycle changes shall publish domain events.
 - Every storage operation shall generate an audit record.
 - Storage APIs shall remain backward compatible.
@@ -243,7 +243,7 @@ The File Storage Service shall support:
 - File metadata belongs exclusively to the File Storage Service.
 - Secure URLs shall provide temporary file access.
 - Storage events are published through the shared Event Bus.
-- Storage metadata follows the Database-per-Service architecture.
+- Storage metadata is logically owned by the File Storage Service and persists in the Initial Production Turso Shared Database / Shared Schema. Object bytes remain in Cloudflare R2. Logical ownership does not imply a separate physical metadata database.
 - Future CDN integration shall extend this service without changing ownership boundaries.
 - Media optimization services may consume stored assets without owning them.
 - This document is the authoritative File Storage Service specification.
@@ -282,4 +282,5 @@ The File Storage Service shall support:
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.1 | 2026-09-12 | FluxDine Platform Architecture Team | File metadata on shared schema; object bytes remain in R2. |
 | 1.0 | Initial Release | FluxDine Platform Architecture Team | Approved as the authoritative File Storage Service specification |

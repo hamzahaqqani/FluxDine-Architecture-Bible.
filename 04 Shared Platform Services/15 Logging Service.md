@@ -10,7 +10,7 @@
 |--------|-------|
 | **Document ID** | FD-SPS-015 |
 | **Document Name** | Logging Service |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Platform Architecture Team |
 | **Classification** | Core Platform Service |
@@ -231,7 +231,7 @@ The Logging Service shall support:
 - Log formats shall remain consistent across the platform.
 - Logs shall never contain sensitive credentials or confidential information.
 - Logging failures shall not interrupt business operations.
-- Log data shall never be modified through another service's database.
+- Log data shall never be modified by bypassing Logging Service APIs.
 - Log lifecycle changes shall publish domain events.
 - Every application and service shall integrate with the Logging Service.
 - Logging APIs shall remain backward compatible.
@@ -248,7 +248,7 @@ The Logging Service shall support:
 - Logs shall be optimized for diagnostics and troubleshooting.
 - Log retention shall be centrally managed.
 - Logging events are published through the shared Event Bus.
-- Logging data follows the Database-per-Service architecture.
+- Logging data is logically owned by the Logging Service and persists in the Initial Production Turso Shared Database / Shared Schema where application logging records are stored. Logical ownership does not imply a separate physical database.
 - Future distributed tracing capabilities shall extend this service without changing ownership boundaries.
 - Monitoring and alerting remain the responsibility of the Monitoring Service.
 - This document is the authoritative Logging Service specification.
@@ -286,4 +286,5 @@ The Logging Service shall support:
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.1 | 2026-09-12 | FluxDine Platform Architecture Team | Logical logging ownership on Turso Shared Database / Shared Schema where records are stored. |
 | 1.0 | Initial Release | FluxDine Platform Architecture Team | Approved as the authoritative Logging Service specification |

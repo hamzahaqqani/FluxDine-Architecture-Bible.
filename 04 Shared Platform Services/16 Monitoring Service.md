@@ -10,7 +10,7 @@
 |--------|-------|
 | **Document ID** | FD-SPS-016 |
 | **Document Name** | Monitoring Service |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Platform Architecture Team |
 | **Classification** | Core Platform Service |
@@ -246,7 +246,7 @@ The Monitoring Service shall support:
 - Health checks shall execute automatically at configurable intervals.
 - Monitoring failures shall never interrupt business operations.
 - Alerts shall support configurable severity levels and routing policies.
-- Monitoring data shall never be modified through another service's database.
+- Monitoring data shall never be modified by bypassing Monitoring Service APIs.
 - Monitoring lifecycle changes shall publish domain events.
 - Every monitoring operation shall generate an audit record where appropriate.
 - Monitoring APIs shall remain backward compatible.
@@ -263,7 +263,7 @@ The Monitoring Service shall support:
 - Operational dashboards are generated from monitoring metrics.
 - Monitoring supports proactive incident detection.
 - Monitoring events are published through the shared Event Bus.
-- Monitoring data follows the Database-per-Service architecture.
+- Monitoring data is logically owned by the Monitoring Service. Application-side monitoring records, where stored, persist in the Initial Production Turso Shared Database / Shared Schema. External systems such as Sentry remain outside the FluxDine database. Logical ownership does not imply a separate physical monitoring database.
 - Future distributed tracing and AIOps capabilities shall extend this service without changing ownership boundaries.
 - Business analytics remain separate from operational monitoring.
 - This document is the authoritative Monitoring Service specification.
@@ -302,4 +302,5 @@ The Monitoring Service shall support:
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.1 | 2026-09-12 | FluxDine Platform Architecture Team | Logical monitoring ownership; no separate physical monitoring database. |
 | 1.0 | Initial Release | FluxDine Platform Architecture Team | Approved as the authoritative Monitoring Service specification |

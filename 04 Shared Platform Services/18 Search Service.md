@@ -10,7 +10,7 @@
 |--------|-------|
 | **Document ID** | FD-SPS-018 |
 | **Document Name** | Search Service |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Platform Architecture Team |
 | **Classification** | Core Platform Service |
@@ -223,7 +223,7 @@ The Search Service shall support:
 - Search indexes shall be synchronized through published events or approved APIs.
 - Search shall respect tenant boundaries and authorization rules.
 - Index updates shall be asynchronous whenever practical.
-- Search metadata shall never be modified through another service's database.
+- Search metadata shall never be modified by bypassing Search Service APIs.
 - Search lifecycle changes shall publish domain events.
 - Every indexing and search operation shall generate an audit record where appropriate.
 - Search APIs shall remain backward compatible.
@@ -240,7 +240,7 @@ The Search Service shall support:
 - Search ranking shall be configurable and extensible.
 - Index synchronization follows an event-driven architecture.
 - Search events are published through the shared Event Bus.
-- Search data follows the Database-per-Service architecture.
+- Search data is logically owned by the Search Service and persists in the Initial Production Turso Shared Database / Shared Schema unless a future dedicated search index is approved. Logical ownership does not imply a separate physical database.
 - Future AI-powered semantic search and vector search capabilities shall extend this service without changing ownership boundaries.
 - Authorization-aware search is mandatory across all platform applications.
 - This document is the authoritative Search Service specification.
@@ -279,4 +279,5 @@ The Search Service shall support:
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.1 | 2026-09-12 | FluxDine Platform Architecture Team | Logical search ownership on Turso Shared Database / Shared Schema unless a future index is approved. |
 | 1.0 | Initial Release | FluxDine Platform Architecture Team | Approved as the authoritative Search Service specification |

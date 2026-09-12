@@ -10,7 +10,7 @@
 |--------|-------|
 | **Document ID** | FD-SPS-013 |
 | **Document Name** | Feature Flag Service |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Platform Architecture Team |
 | **Classification** | Core Platform Service |
@@ -220,7 +220,7 @@ The Feature Flag Service shall support:
 - Feature availability shall never be hardcoded within applications.
 - Rollouts shall support gradual deployment strategies.
 - Feature targeting shall support tenant, user, and environment scopes.
-- Feature flag data shall never be modified through another service's database.
+- Feature flag data shall never be modified by bypassing Feature Flag Service APIs.
 - Feature lifecycle changes shall publish domain events.
 - Every feature management operation shall generate an audit record.
 - Feature Flag APIs shall remain backward compatible.
@@ -237,7 +237,7 @@ The Feature Flag Service shall support:
 - Environment-specific configuration belongs to the Feature Flag Service.
 - Feature targeting shall support tenant, organization, and user scopes.
 - Feature events are published through the shared Event Bus.
-- Feature flag data follows the Database-per-Service architecture.
+- Feature flag data is logically owned by the Feature Flag Service and persists in the Initial Production Turso Shared Database / Shared Schema. Logical ownership does not imply a separate physical database.
 - Future experimentation and A/B testing capabilities shall extend this service without changing ownership boundaries.
 - Feature availability remains independent from subscription entitlements.
 - This document is the authoritative Feature Flag Service specification.
@@ -275,4 +275,5 @@ The Feature Flag Service shall support:
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.1 | 2026-09-12 | FluxDine Platform Architecture Team | Logical feature-flag ownership on Turso Shared Database / Shared Schema. |
 | 1.0 | Initial Release | FluxDine Platform Architecture Team | Approved as the authoritative Feature Flag Service specification |

@@ -10,7 +10,7 @@
 |--------|-------|
 | **Document ID** | FD-SPS-002 |
 | **Document Name** | Identity Service |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Platform Architecture Team |
 | **Classification** | Core Platform Service |
@@ -221,7 +221,7 @@ The Identity Service shall support:
 # Engineering Rules
 
 - The Identity Service is the single source of truth for user identities.
-- Identity data shall never be shared through direct database access.
+- Identity data shall never be modified by bypassing Identity Service APIs.
 - Authentication shall occur before every protected request.
 - Authorization shall be role and permission based.
 - Passwords shall never be stored in plaintext.
@@ -237,7 +237,7 @@ The Identity Service shall support:
 
 - Identity is centralized into a single platform service.
 - Authentication and authorization remain inseparable responsibilities.
-- Identity follows Database-per-Service architecture.
+- Identity follows logical service ownership. Identity records persist in the Initial Production Turso Shared Database / Shared Schema. ADR-003 (separate physical databases) is historical.
 - JWT-based stateless authentication is the default architecture.
 - RBAC is the primary authorization model.
 - Future authorization models may extend RBAC without replacing it.
@@ -278,4 +278,5 @@ The Identity Service shall support:
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.1 | 2026-09-12 | FluxDine Platform Architecture Team | Logical identity ownership on Turso Shared Database / Shared Schema. ADR-003 historical. |
 | 1.0 | Initial Release | FluxDine Platform Architecture Team | Approved as the authoritative Identity Service specification |

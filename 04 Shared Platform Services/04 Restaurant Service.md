@@ -10,7 +10,7 @@
 |--------|-------|
 | **Document ID** | FD-SPS-004 |
 | **Document Name** | Restaurant Service |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Platform Architecture Team |
 | **Classification** | Core Platform Service |
@@ -214,7 +214,7 @@ The Restaurant Service shall support:
 - The Restaurant Service is the single source of truth for restaurant master data.
 - Every restaurant belongs to exactly one tenant.
 - Every branch belongs to exactly one restaurant.
-- Restaurant master data shall never be modified through another service's database.
+- Restaurant master data shall never be modified by bypassing Restaurant Service APIs.
 - Business operations shall reference restaurants through published APIs.
 - Restaurant lifecycle changes shall publish domain events.
 - Every restaurant operation shall generate an audit record.
@@ -232,7 +232,7 @@ The Restaurant Service shall support:
 - Restaurant discovery metadata is owned by the Restaurant Service.
 - Restaurant lifecycle remains independent from commerce operations.
 - Restaurant events are published through the shared Event Bus.
-- Restaurant data follows the Database-per-Service architecture.
+- Restaurant data is logically owned by the Restaurant Service and persists in the Initial Production Turso Shared Database / Shared Schema. Logical ownership does not imply a separate physical database.
 - Future multi-brand and franchise support shall extend this service without changing ownership boundaries.
 - Restaurant activation requires an active tenant.
 - This document is the authoritative Restaurant Service specification.
@@ -271,4 +271,5 @@ The Restaurant Service shall support:
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.1 | 2026-09-12 | FluxDine Platform Architecture Team | Logical restaurant ownership on Turso Shared Database / Shared Schema. |
 | 1.0 | Initial Release | FluxDine Platform Architecture Team | Approved as the authoritative Restaurant Service specification |

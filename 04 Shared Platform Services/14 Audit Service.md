@@ -10,7 +10,7 @@
 |--------|-------|
 | **Document ID** | FD-SPS-014 |
 | **Document Name** | Audit Service |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Platform Architecture Team |
 | **Classification** | Core Platform Service |
@@ -222,7 +222,7 @@ The Audit Service shall support:
 - The Audit Service is the single source of truth for business audit records.
 - Every significant business operation shall generate an audit record.
 - Audit records shall be immutable after creation.
-- Audit records shall never be modified through another service's database.
+- Audit records shall never be modified by bypassing Audit Service APIs.
 - Audit retention shall follow configurable retention policies.
 - Audit exports shall preserve record integrity.
 - Audit lifecycle changes shall publish domain events.
@@ -241,7 +241,7 @@ The Audit Service shall support:
 - Compliance reporting is generated from audit records.
 - Audit retention is centrally managed.
 - Audit events are published through the shared Event Bus.
-- Audit data follows the Database-per-Service architecture.
+- Audit data is logically owned by the Audit Service and persists in the Initial Production Turso Shared Database / Shared Schema. Logical ownership does not imply a separate physical database.
 - Future regulatory compliance requirements shall extend this service without changing ownership boundaries.
 - Operational logging remains the responsibility of the Logging Service.
 - This document is the authoritative Audit Service specification.
@@ -280,4 +280,5 @@ The Audit Service shall support:
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.1 | 2026-09-12 | FluxDine Platform Architecture Team | Logical audit ownership on Turso Shared Database / Shared Schema. |
 | 1.0 | Initial Release | FluxDine Platform Architecture Team | Approved as the authoritative Audit Service specification |

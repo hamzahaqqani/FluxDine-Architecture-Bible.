@@ -10,7 +10,7 @@
 |--------|-------|
 | **Document ID** | FD-SPS-006 |
 | **Document Name** | Billing Service |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Platform Architecture Team |
 | **Classification** | Core Platform Service |
@@ -225,7 +225,7 @@ The Billing Service shall support:
 - Billing calculations shall never be performed by client applications.
 - The Billing Service shall never authorize or capture payments.
 - Payment execution belongs exclusively to the Payment Service.
-- Billing data shall never be modified through another service's database.
+- Billing data shall never be modified by bypassing Billing Service APIs.
 - Billing lifecycle changes shall publish domain events.
 - Every billing operation shall generate an audit record.
 - Billing APIs shall remain backward compatible.
@@ -242,7 +242,7 @@ The Billing Service shall support:
 - Invoice generation remains independent from payment execution.
 - Subscription entitlements are derived from billing state.
 - Billing events are published through the shared Event Bus.
-- Billing data follows the Database-per-Service architecture.
+- Billing data is logically owned by the Billing Service and persists in the Initial Production Turso Shared Database / Shared Schema. Logical ownership does not imply a separate physical database.
 - Future pricing models shall extend the Billing Service without changing ownership boundaries.
 - Payment execution remains delegated to the Payment Service.
 - This document is the authoritative Billing Service specification.
@@ -280,4 +280,5 @@ The Billing Service shall support:
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.1 | 2026-09-12 | FluxDine Platform Architecture Team | Logical billing ownership on Turso Shared Database / Shared Schema. |
 | 1.0 | Initial Release | FluxDine Platform Architecture Team | Approved as the authoritative Billing Service specification |

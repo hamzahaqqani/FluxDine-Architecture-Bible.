@@ -6,7 +6,9 @@ This document provides the high-level logical relationship model across the majo
 
 It is not a physical database diagram.
 
-FluxDine uses Database-per-Service architecture, therefore the entities below represent service-owned domains and their logical relationships.
+Current Initial Production persistence is **Turso Shared Database / Shared Schema**. Entities below are logical domain relationships stored in that shared schema. Logical ownership by platform services does **not** mean each service has a separate physical database.
+
+Database-per-Service (ADR-003) is historical, not the current physical model.
 
 ```mermaid
 erDiagram

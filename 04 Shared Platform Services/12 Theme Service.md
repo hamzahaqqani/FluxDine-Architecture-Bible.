@@ -10,7 +10,7 @@
 |--------|-------|
 | **Document ID** | FD-SPS-012 |
 | **Document Name** | Theme Service |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Platform Architecture Team |
 | **Classification** | Core Platform Service |
@@ -217,7 +217,7 @@ The Theme Service shall support:
 - Theme publishing shall be version-controlled.
 - Theme configuration shall remain independent from website content.
 - Binary assets shall be stored through the File Storage Service.
-- Theme data shall never be modified through another service's database.
+- Theme data shall never be modified by bypassing Theme Service APIs.
 - Theme lifecycle changes shall publish domain events.
 - Every theme operation shall generate an audit record.
 - Theme APIs shall remain backward compatible.
@@ -234,7 +234,7 @@ The Theme Service shall support:
 - Theme publishing shall support version control and rollback.
 - Theme rendering configuration remains independent from domain management.
 - Theme events are published through the shared Event Bus.
-- Theme data follows the Database-per-Service architecture.
+- Theme data is logically owned by the Theme Service and persists in the Initial Production Turso Shared Database / Shared Schema. Logical ownership does not imply a separate physical database.
 - Future marketplace themes shall extend this service without changing ownership boundaries.
 - Theme customization remains tenant-specific.
 - This document is the authoritative Theme Service specification.
@@ -274,4 +274,5 @@ The Theme Service shall support:
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.1 | 2026-09-12 | FluxDine Platform Architecture Team | Logical theme ownership on Turso Shared Database / Shared Schema. |
 | 1.0 | Initial Release | FluxDine Platform Architecture Team | Approved as the authoritative Theme Service specification |

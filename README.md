@@ -33,6 +33,17 @@ The platform is designed around the principle:
 
 FluxDine provides the technology required to support restaurant digital operations while preserving restaurant ownership of its brand, customer relationship, data, ordering experience, and digital presence.
 
+Current Initial Production (concise):
+
+- Hosting: Vercel (`fluxdine-staging` occupies the Initial Production role)
+- Database: Turso, Shared Database / Shared Schema
+- Object storage: Cloudflare R2
+- Email: Resend
+- Observability: Sentry
+- DNS: Cloudflare DNS
+
+PostgreSQL, Database-per-Service, Kubernetes, and dedicated queues/workers are **future** unless a later accepted ADR says otherwise.
+
 ---
 
 # 3. Architecture Bible Structure
@@ -252,17 +263,17 @@ Services shall not duplicate another service's authoritative business logic.
 
 # 10. Database Ownership
 
-FluxDine follows the:
+Current Initial Production persistence:
 
-> **Database-per-Service**
+```text
+Turso
+Shared Database
+Shared Schema
+```
 
-architecture.
+Logical Shared Platform Services own their domain data (rules, access, lifecycle). They do **not** each have a separate physical database.
 
-Each Shared Platform Service owns its own persistence layer.
-
-A service shall not directly access another service's database.
-
-Cross-service communication occurs through:
+Cross-service communication still prefers:
 
 ```text
 API
@@ -270,7 +281,9 @@ Event
 Approved Abstraction
 ```
 
-rather than direct database access.
+Shared schema is not unrestricted cross-module or cross-tenant access. Tenant isolation remains mandatory.
+
+Database-per-Service (ADR-003) is historical. PostgreSQL is a **future** migration target.
 
 ---
 
@@ -474,9 +487,9 @@ Restaurant ERD
 Complete ERD
 ```
 
-The ERDs represent logical ownership and relationships.
+The ERDs represent logical ownership and relationships on the current Turso Shared Database / Shared Schema.
 
-They do not override the Database-per-Service architecture.
+They do not require Database-per-Service as the current physical architecture.
 
 ---
 
@@ -920,9 +933,9 @@ FluxDine architecture is guided by the following core principles:
 ```text
 Architecture Before Implementation
 
-Clear Service Ownership
+Clear Service Ownership (logical)
 
-Database per Service
+Shared Database / Shared Schema (current physical persistence)
 
 Tenant Isolation
 
@@ -1162,7 +1175,7 @@ But the architecture should provide a stable foundation from which FluxDine can 
 
 **Architecture Bible Status:** Complete
 
-**Current Version:** 1.0
+**Current Version:** 1.2
 
 **Repository:** `FLUXDINE-ARCHITECTURE`
 

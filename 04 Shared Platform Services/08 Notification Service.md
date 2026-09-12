@@ -10,7 +10,7 @@
 |--------|-------|
 | **Document ID** | FD-SPS-008 |
 | **Document Name** | Notification Service |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Platform Architecture Team |
 | **Classification** | Core Platform Service |
@@ -227,7 +227,7 @@ The Notification Service shall support:
 - Notification templates shall be centrally managed.
 - Notification preferences shall be enforced before delivery.
 - Notification retries shall follow configurable retry policies.
-- Notification data shall never be modified through another service's database.
+- Notification data shall never be modified by bypassing Notification Service APIs.
 - Notification lifecycle changes shall publish domain events.
 - Every notification operation shall generate an audit record.
 - Notification APIs shall remain backward compatible.
@@ -244,7 +244,7 @@ The Notification Service shall support:
 - Notification templates are managed centrally.
 - Delivery retries shall be automated.
 - Notification events are published through the shared Event Bus.
-- Notification data follows the Database-per-Service architecture.
+- Notification data is logically owned by the Notification Service and persists in the Initial Production Turso Shared Database / Shared Schema. Logical ownership does not imply a separate physical database.
 - Future delivery channels shall integrate without changing service ownership.
 - Notification preferences shall always be respected during delivery.
 - This document is the authoritative Notification Service specification.
@@ -284,4 +284,5 @@ The Notification Service shall support:
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.1 | 2026-09-12 | FluxDine Platform Architecture Team | Logical notification ownership on Turso Shared Database / Shared Schema. |
 | 1.0 | Initial Release | FluxDine Platform Architecture Team | Approved as the authoritative Notification Service specification |

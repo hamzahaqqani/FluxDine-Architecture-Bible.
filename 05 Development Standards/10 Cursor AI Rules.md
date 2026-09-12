@@ -10,7 +10,7 @@
 |--------|-------|
 | **Document ID** | FD-DS-010 |
 | **Document Name** | Cursor AI Rules |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Engineering Team |
 | **Classification** | AI Development Standard |
@@ -52,11 +52,19 @@ Cursor AI shall:
 
 - Follow Clean Architecture.
 - Follow Feature-First Architecture.
-- Follow Database-per-Service architecture.
-- Follow Shared Platform Services architecture.
-- Follow Event-Driven Architecture.
+- Follow current Initial Production persistence: **Turso, Shared Database, Shared Schema**.
+- Treat ADR-003 Database-per-Service as **historical**. Do not implement separate physical databases per service unless a later accepted ADR requires it.
+- Do not introduce PostgreSQL as the current database.
+- Follow Shared Platform Services as **logical** ownership boundaries.
+- Follow Event-Driven Architecture where the platform event model applies; do not require a dedicated broker for Initial Production.
 - Respect module boundaries.
-- Respect service ownership.
+- Respect logical service ownership.
+
+Inspect the existing schema before proposing changes. Use existing schema conventions. Do not redesign architecture unless explicitly authorized.
+
+Shared schema is **not** permission for unrestricted cross-tenant or cross-module data access. Tenant isolation and authorization remain mandatory.
+
+Current Architecture Bible decisions take precedence over historical ADRs.
 
 Architecture shall never be violated to simplify implementation.
 
@@ -88,12 +96,12 @@ Business ownership is immutable.
 
 Cursor AI shall never:
 
-- Access another service's database.
-- Share database tables across services.
+- Directly query or write another service's owned tables.
+- Treat the shared schema as unrestricted cross-module access.
 - Duplicate business data.
 - Bypass repositories.
 
-Every service owns its own database.
+Every service has logical ownership of its domain data. Physical storage is the Turso Shared Database / Shared Schema. Database-per-service is not current.
 
 Repositories are the only approved persistence layer.
 
@@ -393,4 +401,5 @@ If architectural ambiguity exists, Cursor AI shall:
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.1 | 2026-09-12 | FluxDine Engineering Team | Current DB: Turso Shared Database / Shared Schema. ADR-003 historical. No per-service DBs or PostgreSQL as current. Tenant isolation and logical service boundaries preserved. |
 | 1.0 | Initial Release | FluxDine Engineering Team | Approved as the authoritative Cursor AI Rules specification |
