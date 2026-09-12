@@ -12,11 +12,11 @@
 |--------|-------|
 | **Document ID** | FD-ENG-INF-006 |
 | **Document Name** | Backup Strategy |
-| **Version** | 1.1 |
+| **Version** | 1.2 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Engineering |
 | **Classification** | Internal Engineering Specification |
-| **Depends On** | Deployment Specification<br>Database Engineering Specifications<br>Environment & Secrets Strategy<br>Logging<br>Monitoring |
+| **Depends On** | Deployment Specification<br>Database Engineering Specifications<br>Environment & Secrets Strategy<br>Logging<br>Monitoring<br>ADR-055 |
 | **Referenced By** | Disaster Recovery<br>Operations<br>Security Architecture<br>Incident Response |
 
 ---
@@ -179,8 +179,17 @@ The current Initial Production architecture uses:
 | Error Monitoring | Sentry |
 | Email | Resend |
 | DNS | Cloudflare DNS |
+| Application scheduled jobs | Vercel Cron (not the database backup runner) |
+| Database backup runner | GitHub Actions (ADR-055) |
+| Database backup storage | Dedicated private R2 bucket (recommended name `fluxdine-database-backups`) |
 
-The backup strategy shall use the recovery capabilities appropriate to each system rather than forcing every provider into an identical backup model.
+The accepted database backup architecture is **ADR-055 — Turso PITR and R2 Independent Database Backup Strategy**. That ADR is authoritative for mechanism, runner, frequency, integrity, and restore cutover. This specification states the operational backup requirements that ADR-055 implements.
+
+Vercel Hobby Cron is **not** the authoritative database backup mechanism.
+
+Application File Storage uses the existing application R2 bucket. Database dumps must **not** be stored in that application bucket.
+
+The backup strategy shall use the recovery capabilities appropriate to each system rather than forcing every provider into an identical backup model. Database backup mechanism is no longer unspecified.
 
 ---
 
@@ -195,24 +204,85 @@ The current backup architecture is:
         |              |              |
         v              v              v
       Turso            R2          Application
-     Database       Objects        Source/Config
+     Shared DB      App objects    Source/Config
+     Shared Schema  (app bucket)   GitHub/Vercel
         |              |              |
-        v              v              v
-   DB Backups     R2 Recovery     GitHub/Vercel
-        |              |              |
-        +--------------+--------------+
-                       |
-                       v
-             Recovery Verification
-                       |
-                       v
-                Restore Testing
-                       |
-                       v
-              Disaster Recovery
-````
+        +--+           |              |
+           |           |              |
+     continuous PITR   |              |
+     (primary recent   |              |
+      recovery;        |              |
+      plan-dependent   |              |
+      window; NOT the  |              |
+      30-day guarantee)|              |
+           |           |              |
+           v           v              v
+     GitHub Actions  App R2        GitHub/Vercel
+     twice-daily     recovery      known-good
+     logical dumps                 commits
+           |
+           v
+     Dedicated private R2
+     fluxdine-database-backups
+           |
+           v
+     Verification + manifest
+           |
+           v
+     Restore testing (throwaway Turso)
+           |
+           v
+     Disaster Recovery (new DB + cutover)
+```
 
-The architecture intentionally avoids introducing a dedicated backup service unless operational requirements justify one.
+The architecture intentionally avoids introducing a dedicated backup service, worker cluster, or Vercel Function dump path unless operational requirements later justify a dedicated backup runner.
+
+---
+
+# Accepted Database Backup Architecture (ADR-055)
+
+## Primary recovery
+
+Turso native Point-in-Time Recovery (PITR) is the **primary recent-recovery** mechanism for incidents that fall within the **actual** PITR retention window of the current Turso plan.
+
+PITR retention is **plan-dependent**. This specification must **not** assume 30-day PITR. PITR remains inside the Turso provider/failure domain and is therefore **not** the independent recovery copy.
+
+PITR restore creates a **new** Turso database. It does not overwrite Initial Production in place.
+
+```text
+Turso PITR timestamp
+    → new Turso database
+    → compatibility verification
+    → controlled Vercel cutover
+    → health verification
+    → operational validation
+```
+
+## Independent recovery copy
+
+FluxDine creates **full logical** Turso database dumps and stores them in a **dedicated private** Cloudflare R2 backup location.
+
+Recommended bucket name: `fluxdine-database-backups`.
+
+That bucket must be private, must have no public access or public custom domain, and must not be accessible with application File Storage credentials.
+
+## Backup runner
+
+GitHub Actions is the Initial Production database backup runner.
+
+The backup workflow is operational infrastructure, separate from ordinary pull-request CI. Ordinary CI must not receive production backup secrets.
+
+## Frequency
+
+Independent full dumps occur **approximately twice daily**.
+
+Twice-daily verified dumps provide meaningful margin below the maximum 24-hour RPO. Vercel Hobby once-daily Cron jitter can exceed a strict 24-hour interval and is therefore not used for database backups.
+
+## Retention
+
+The **independent R2 backup layer** maintains at least **30 days of successful, verified** database backups. Operational recommendation: retain 35–40 days where practical.
+
+Turso PITR does **not** provide this 30-day guarantee unless the actual plan is separately verified to do so.
 
 ---
 
@@ -257,18 +327,13 @@ A tighter recovery point may be implemented when provider capabilities and opera
 
 # Database Backup Frequency
 
-The exact provider mechanism and schedule shall be selected according to the capabilities of the current database provider.
+Independent full logical dumps shall run approximately twice daily via GitHub Actions (ADR-055).
 
-The mandatory requirement is:
+This schedule is intended to keep the gap between **successful verified** dumps well below the maximum 24-hour RPO.
 
-* automated database protection
-* sufficient frequency to satisfy the 24-hour maximum RPO
-* successful verification
-* minimum 30-day recoverable history
+Turso PITR continues continuously within its plan window and may provide a tighter recovery point for in-window incidents.
 
-The architecture does **not** require a specific hourly incremental or daily full-backup mechanism unless that mechanism is actually adopted and supported by the selected provider.
-
-Provider-specific backup configuration shall be documented separately from this architecture specification.
+The architecture does **not** use Vercel Hobby Cron as the database backup scheduler.
 
 ---
 
@@ -292,11 +357,22 @@ Retention changes shall not reduce the mandatory 30-day recoverable history with
 
 # Independent Database Backup Storage
 
-Critical database recovery data shall not exist exclusively inside the same failure domain as the primary database.
+Critical database recovery data shall not exist exclusively inside the Turso primary failure domain.
 
-The backup strategy shall therefore provide an independently recoverable backup copy or recovery mechanism appropriate to the selected provider.
+The independent copy is the dedicated private R2 dump bucket, not the application File Storage bucket and not Turso PITR alone.
 
-The goal is protection against scenarios in which the primary database or its immediate provider environment becomes unavailable or compromised.
+## R2 dump recovery
+
+```text
+Verified R2 dump
+    → new Turso database
+    → compatibility verification
+    → controlled Vercel cutover
+    → health verification
+    → operational validation
+```
+
+Never restore a dump directly onto the live Initial Production database.
 
 ---
 
@@ -507,6 +583,14 @@ Encryption keys and credentials shall be protected using the approved secrets-ma
 
 Production backups shall only be accessible to authorized personnel and systems.
 
+Application R2 credentials (File Storage) must not access the database backup bucket.
+
+Backup R2 credentials are used only by the GitHub Actions backup workflow, with least privilege and no unnecessary Delete permission.
+
+Backup Turso credentials are GitHub Actions production secrets only, never in Git, never in Preview or ordinary Development/Testing.
+
+Restore credentials are break-glass / operator credentials, not Preview or PR CI.
+
 Backup access shall follow:
 
 * least privilege
@@ -531,18 +615,24 @@ Similarly, application credentials should not automatically provide unrestricted
 
 # Backup Verification
 
-Backup creation shall be followed by appropriate verification.
+A dump object that merely exists in R2 is **not** a successful backup.
 
-Verification should establish, where supported:
+A database dump backup is **SUCCESS** only after:
 
-* backup completion
-* backup integrity
-* expected backup availability
-* expected retention
-* recoverability
-* absence of corruption
+1. dump generation succeeds
+2. compression succeeds
+3. SHA-256 checksum is calculated
+4. R2 upload succeeds
+5. uploaded object verification succeeds (existence, size/metadata, checksum where practical)
+6. manifest is recorded
 
-A backup that cannot be recovered shall not be considered an effective backup.
+Statuses:
+
+- **SUCCESS** — verified dump and manifest
+- **PARTIAL FAILURE** — dump or upload started but not verified
+- **FAILURE** — no usable independent copy from the run
+
+Invalid (failed verification) objects must not count toward the 30-day recoverable history.
 
 ---
 
@@ -554,18 +644,15 @@ Initial Production recovery testing shall occur:
 
 > **At least once per quarter.**
 
-Restore testing shall verify:
+Each quarterly test shall restore a **verified** R2 dump into an **isolated throwaway Turso database**.
 
-* backup accessibility
-* data integrity
-* restoration process
-* application/database compatibility
-* migration compatibility
-* recovery timing
-* operational documentation
-* access to required recovery secrets/configuration
+The test must:
 
-Restore tests should be performed in a controlled non-production recovery environment whenever practical.
+- never overwrite Initial Production
+- never change the production Vercel database URL
+- verify schema/migration state and representative data where practical
+- destroy the throwaway database afterward
+- record backup ID and result
 
 ---
 
@@ -642,12 +729,22 @@ When a backup operation fails:
 
 1. The failure shall be recorded.
 2. Existing successful backups shall be preserved.
-3. The operation should retry where supported.
+3. The operation should retry on the next scheduled run (or earlier if authorized).
 4. The failure shall be surfaced to operations.
 5. RPO exposure shall be evaluated.
 6. Corrective action shall be taken when required.
 
+Specific cases:
+
+- **Dump failure:** FAILURE; no successful backup recorded.
+- **R2 upload failure:** FAILURE; incomplete multipart data is not a valid backup.
+- **Runner timeout:** not SUCCESS; incomplete artifacts cleaned up by lifecycle.
+- **Verification failure (size/checksum):** invalid; does not count toward 30-day history.
+- **Retention cleanup failure:** over-retention is safer than deleting the last usable copy.
+
 A failed backup must never silently replace or destroy the last known-good recovery point.
+
+Monitoring failure must not mark an invalid backup as SUCCESS.
 
 ---
 
@@ -711,11 +808,13 @@ Production backup access shall be limited to authorized personnel and approved r
 
 # Tenant Isolation
 
-Backups may contain data belonging to multiple FluxDine tenants because the current architecture uses a shared database/shared-schema model.
+Backups contain data belonging to multiple FluxDine tenants because Initial Production uses Shared Database / Shared Schema.
 
-Backup handling shall therefore preserve the security boundary of the entire production dataset.
+Database recovery is therefore **platform-wide**. A restore returns all tenants present in that database.
 
-Tenant-specific restoration, if ever required, shall be performed through controlled recovery procedures rather than granting tenants direct access to shared backup storage.
+This specification does **not** provide tenant-scoped PITR or tenant-scoped dump restore.
+
+Backup handling shall preserve the security boundary of the entire production dataset. Tenants shall not receive direct access to shared backup storage.
 
 ---
 
@@ -1103,8 +1202,7 @@ Recovery documentation shall identify required inputs without exposing secret va
 Future backup capabilities may include:
 
 ```text
-Point-in-Time Database Recovery
-Continuous Database Backup
+Continuous Database Backup beyond current Turso PITR window
 Cross-Region Database Replication
 Immutable Backup Storage
 Air-Gapped Backups
@@ -1114,14 +1212,16 @@ Automated Disaster Recovery Drills
 Backup Integrity Attestation
 Compliance Archive Storage
 Multi-Region Recovery
+Dedicated backup runner if dump size exceeds GitHub Actions practicality
 ```
 
-These capabilities are not mandatory for the current Initial Production architecture unless separately approved.
+Turso PITR and GitHub Actions R2 dumps are **current** (ADR-055), not future. These future items are not mandatory unless separately approved.
 
 ---
 
 # References
 
+* ADR-055 — Turso PITR and R2 Independent Database Backup Strategy
 * Deployment Specification
 * Environment & Secrets Strategy
 * Environment Variables
@@ -1140,6 +1240,7 @@ These capabilities are not mandatory for the current Initial Production architec
 | Version | Date            | Author               | Description                                                                                                                                                                                                                   |
 | ------- | --------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1.0     | Initial Release | FluxDine Engineering | Initial authoritative Backup Strategy specification                                                                                                                                                                           |
+| 1.2     | 2026-09-12      | FluxDine Engineering | Aligned with ADR-055: Turso PITR primary recent recovery; GitHub Actions twice-daily logical dumps to dedicated private R2; 30-day history from R2 not assumed PITR; new-DB restore; Vercel Cron is not the DB backup runner. |
 | 1.1     | 2026-09-12      | FluxDine Engineering | Aligned backup architecture with Turso Initial Production, 24-hour RPO, 4-hour RTO, 30-day recoverable database history, independent recovery, R2 recovery, GitHub/Vercel application recovery, and quarterly restore testing |
 
-```
+---

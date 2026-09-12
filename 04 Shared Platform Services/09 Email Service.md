@@ -10,7 +10,7 @@
 |--------|-------|
 | **Document ID** | FD-SPS-009 |
 | **Document Name** | Email Service |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Platform Architecture Team |
 | **Classification** | Core Platform Service |
@@ -23,12 +23,24 @@
 
 The Email Service provides centralized email delivery across the entire FluxDine platform.
 
+Current Initial Production delivery path:
+
+```text
+FluxDine application
+    → shared Email Service (logical platform service)
+    → Resend (current provider)
+```
+
+SMTP is **not** the current production email provider.
+
+The Email Service is a **logical** shared platform service. It is not independently deployed infrastructure with its own database. Email persistence, where stored by the platform, belongs to the current Turso **Shared Database / Shared Schema**. Database-per-service is not the current Initial Production topology.
+
 It is the single authoritative owner of:
 
 - Email Delivery
 - Email Templates
 - Transactional Emails
-- Email Queue
+- Email Queue (logical delivery/retry state; not a dedicated distributed queue)
 - Email Scheduling
 - Delivery Status
 - Bounce Handling
@@ -80,14 +92,14 @@ Notification orchestration belongs exclusively to the Notification Service.
 
 The Email Service owns:
 
-- Email Database
+- Email records and templates (shared-schema persistence where applicable)
 - Email APIs
 - Email Events
 - Email Business Rules
-- Email Delivery Queue
+- Email Delivery Queue (logical)
 - Email Template Registry
 
-Other services consume published APIs only.
+Other services consume published APIs only. There is no separate current Email Service database infrastructure.
 
 ---
 
@@ -225,9 +237,9 @@ The Email Service shall support:
 - The Email Service is the single source of truth for email delivery.
 - All transactional emails shall be sent through the Email Service.
 - Email templates shall be centrally managed and versioned.
-- Provider integrations shall be abstracted behind a provider interface.
+- Provider integrations shall be abstracted behind a provider interface. The current provider is Resend.
 - Email delivery shall support automatic retry and failover policies.
-- Email data shall never be modified through another service's database.
+- Email data shall never be modified by bypassing Email Service APIs.
 - Email lifecycle changes shall publish domain events.
 - Every email operation shall generate an audit record.
 - Email APIs shall remain backward compatible.
@@ -243,9 +255,9 @@ The Email Service shall support:
 - Email providers shall be abstracted to allow provider replacement without affecting consuming services.
 - Email templates are centrally managed.
 - Delivery retries and provider failover shall be automated.
-- Email events are published through the shared Event Bus.
-- Email data follows the Database-per-Service architecture.
-- Future email providers shall integrate through the provider abstraction layer.
+- Email events are published through the shared Event Bus **when that bus exists**; Initial Production does not require a dedicated event broker.
+- Email persistence follows the current Initial Production **Shared Database / Shared Schema**. ADR-003 (database-per-service) is historical and is not current topology. This document does not rewrite ADR-003.
+- Future email providers shall integrate through the provider abstraction layer. SMTP or additional providers may be used later behind the same abstraction; they are not current production.
 - Marketing email capabilities may be added without changing transactional email ownership.
 - This document is the authoritative Email Service specification.
 
@@ -283,4 +295,5 @@ The Email Service shall support:
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.1 | 2026-09-12 | FluxDine Platform Architecture Team | Current path FluxDine → Email Service → Resend; shared schema persistence; SMTP and database-per-service are not current. |
 | 1.0 | Initial Release | FluxDine Platform Architecture Team | Approved as the authoritative Email Service specification |

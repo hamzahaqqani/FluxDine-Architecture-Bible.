@@ -12,7 +12,7 @@
 |--------|-------|
 | **Document ID** | FD-ENG-INF-007 |
 | **Document Name** | Disaster Recovery |
-| **Version** | 1.1 |
+| **Version** | 1.2 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Engineering |
 | **Classification** | Internal Engineering Specification |
@@ -157,7 +157,8 @@ Initial Production currently consists of:
 | Error Monitoring | Sentry |
 | Email | Resend |
 | DNS | Cloudflare DNS |
-| Scheduled Jobs | Vercel Cron |
+| Scheduled Jobs | Vercel Cron (application jobs only; **not** database backup) |
+| Database backup | GitHub Actions twice-daily dumps to dedicated private R2 (ADR-055) |
 | Application Health | `/api/v1/health` |
 
 The current platform does not operate a dedicated VM cluster, Kubernetes cluster, independent queue infrastructure, cache cluster, or multi-region application fleet.
@@ -179,9 +180,11 @@ Initial Production has the following mandatory recovery objectives.
 
 These are architecture-level requirements.
 
-The Backup Strategy defines how recoverable data is maintained.
+The Backup Strategy and **ADR-055 — Turso PITR and R2 Independent Database Backup Strategy** define how recoverable data is maintained.
 
 This document defines how that recovery capability is used.
+
+The independent R2 dump layer is responsible for at least **30 days of successful verified** database backups. Turso PITR retention is plan-dependent and must **not** be assumed to be 30 days.
 
 ---
 
@@ -203,6 +206,10 @@ The Initial Production Recovery Time Objective is:
 
 > **Maximum 4 hours.**
 
+This is an **operational recovery target**, not an automatic failover SLA.
+
+RTO depends on recovery mechanism availability, human authorization, new database creation, application/database compatibility, Vercel configuration cutover, health verification, and operational validation.
+
 The recovery process shall be designed so that critical service restoration can occur within four hours under the defined recovery assumptions.
 
 RTO includes:
@@ -216,6 +223,8 @@ RTO includes:
 - domain recovery where required
 - validation
 - service restoration
+
+The current architecture does **not** provide automatic database failover, automatic multi-region failover, multi-cloud replication, Kubernetes disaster recovery, or a dedicated backup cluster.
 
 ---
 
@@ -469,39 +478,48 @@ Database recovery may be required when:
 * the primary database becomes unrecoverable
 * provider-level database failure requires restoration
 
-Database recovery shall use a verified recovery point.
+Because FluxDine uses **Shared Database / Shared Schema**, a database restore is **platform-wide**. It restores all tenants represented in that database. This specification does not provide tenant-level restore.
 
-The selected recovery point shall consider:
-
-* RPO
-* incident timeline
-* data integrity
-* known-good application version
-* database schema/migration state
-* business impact
+Never overwrite the live Initial Production database as the first restoration step. Restore always creates a **new** Turso database, then performs compatibility verification and a **controlled Vercel cutover**.
 
 ---
 
-# Database Recovery Procedure
+# Turso PITR Recovery
 
-At a high level:
+Prefer Turso PITR for recent accidental change or corruption **within the actual PITR window**.
 
 ```text
-1. Identify database failure
-2. Stop or isolate harmful application activity
-3. Determine whether restoration is required
-4. Select trusted recovery point
-5. Prepare recovery environment
-6. Restore database
-7. Verify schema/migration state
-8. Deploy compatible application version
-9. Validate data integrity
-10. Validate application behavior
-11. Restore normal traffic
-12. Monitor closely
+1. Identify recovery point (timestamp before the incident)
+2. Use Turso PITR to create a NEW Turso database
+3. Verify schema
+4. Verify migration state
+5. Verify application compatibility
+6. Verify representative data
+7. Controlled Vercel database configuration/cutover
+8. Health verification
+9. Operational validation
+10. Retain the old database until recovery is confirmed
 ```
 
-Detailed provider-specific execution commands shall be maintained separately.
+PITR does not overwrite production in place. PITR is not automatic failover.
+
+---
+
+# R2 Backup Recovery
+
+When PITR is unavailable, outside the PITR window, or insufficient (including complete Turso database loss):
+
+```text
+1. Select the latest SUCCESS (verified) R2 dump
+2. Verify integrity, checksum, manifest, timestamp, migration/application compatibility
+3. Restore into a NEW Turso database
+4. Compatibility validation
+5. Controlled Vercel cutover
+6. Health verification
+7. Operational validation
+```
+
+R2 is a recovery copy, not live read-through or failover storage.
 
 ---
 
@@ -801,8 +819,8 @@ Recovery readiness shall be tested at least:
 
 Testing shall include, as appropriate:
 
-* database restore
-* application redeployment
+* database restore into a **throwaway Turso database** (never change production Vercel database URL during the test)
+* application redeployment (isolated, not production cutover during the quarterly backup restore test)
 * configuration recovery
 * secret recovery validation
 * R2 recovery
@@ -814,7 +832,7 @@ Testing shall include, as appropriate:
 
 Not every quarterly exercise must simulate a full catastrophic production outage.
 
-Controlled recovery drills may be performed in an isolated recovery environment.
+The ADR-055 quarterly dump restore test must never overwrite Initial Production.
 
 ---
 
@@ -1405,6 +1423,7 @@ These capabilities are not mandatory for Initial Production unless separately ap
 * Monitoring
 * Logging
 * Backup Strategy
+* ADR-055 — Turso PITR and R2 Independent Database Backup Strategy
 * Security Architecture
 * Database Engineering Specifications
 * Scaling Strategy
@@ -1416,6 +1435,7 @@ These capabilities are not mandatory for Initial Production unless separately ap
 | Version | Date            | Author               | Description                                                                                                                                                                                         |
 | ------- | --------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1.0     | Initial Release | FluxDine Engineering | Initial Disaster Recovery specification                                                                                                                                                             |
+| 1.2     | 2026-09-12      | FluxDine Engineering | ADR-055 restore: new Turso DB then cutover; PITR vs R2 paths; RTO is operational not automatic failover; 30-day history from R2; platform-wide shared-schema restore; quarterly throwaway tests. |
 | 1.1     | 2026-09-12      | FluxDine Engineering | Aligned Disaster Recovery with current Vercel/Turso/R2 architecture, 24-hour RPO, 4-hour RTO, 30-day recoverable history, tenant isolation, migration-aware recovery, and quarterly restore testing |
 
-```
+---
