@@ -10,7 +10,7 @@
 |--------|-------|
 | **Document ID** | FD-SPS-001 |
 | **Document Name** | Shared Services Overview |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Platform Architecture Team |
 | **Classification** | Core Platform Architecture |
@@ -158,7 +158,7 @@ Each service owns:
 - Business Rules
 - APIs
 - Events
-- Database
+- Domain data (logical ownership)
 - Internal Models
 - Validation Rules
 
@@ -170,35 +170,23 @@ Internal implementation details remain private.
 
 # Database Ownership
 
-Every Shared Platform Service owns its own persistent data.
+Every Shared Platform Service has logical ownership of its domain data: business rules, access rules, and lifecycle.
+
+Initial Production physical persistence is **Turso, Shared Database, Shared Schema**. Logical ownership does not mean a separate physical database per service.
 
 ```text
-Identity Service
-
-↓
-
-Identity Database
-
------------------------
-
-Payment Service
-
-↓
-
-Payment Database
-
------------------------
-
-Notification Service
-
-↓
-
-Notification Database
+Identity Service     → logical ownership of identity data
+Payment Service      → logical ownership of payment data
+Notification Service → logical ownership of notification data
+        ↓
+Turso Shared Database / Shared Schema
 ```
 
-No service may directly read or write another service's database.
+No service may directly read or write another service's owned tables. Shared schema is not unrestricted cross-service access.
 
 All communication shall occur through APIs or domain events.
+
+Database-per-Service (ADR-003) is historical. It is not the current Initial Production topology. It remains a **future** possibility only if a later accepted ADR authorizes it.
 
 ---
 
@@ -342,9 +330,9 @@ Business capabilities shall never be split across multiple services.
 
 ## Rule SPS-002
 
-Every Shared Platform Service shall own its own database.
+Every Shared Platform Service shall own its domain data logically (rules, authorization, and lifecycle).
 
-Direct database access between services is prohibited.
+Initial Production stores that data in the Turso Shared Database / Shared Schema. Direct persistence bypass of another service's owned tables is prohibited.
 
 ---
 
@@ -396,7 +384,7 @@ These capabilities are mandatory.
 
 Service implementations shall be stateless wherever practical.
 
-Persistent business state shall reside in the service's owned datastore.
+Persistent business state shall reside in the service's owned tables in the shared schema.
 
 ---
 
@@ -436,9 +424,11 @@ Ownership boundaries shall remain strict.
 
 ## ADR-SPS-003
 
-Database-per-service architecture is mandatory.
+Logical data ownership per service is mandatory.
 
-Shared databases between services are prohibited.
+Initial Production uses a shared Turso database and shared schema. Database-per-service is historical (ADR-003) and is not current. Physical per-service databases remain a **future** option only if a later accepted ADR authorizes them.
+
+Shared schema does not authorize unrestricted cross-service table access.
 
 ---
 
@@ -743,4 +733,5 @@ Ownership shall remain unique and authoritative.
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.1 | 2026-09-12 | FluxDine Platform Architecture Team | Initial Production persistence: Turso Shared Database / Shared Schema. Logical service ownership retained. Database-per-service is historical/future, not current. |
 | 1.0 | Initial Release | FluxDine Platform Architecture Team | Approved as the authoritative Shared Platform Services architecture specification governing all reusable platform services |

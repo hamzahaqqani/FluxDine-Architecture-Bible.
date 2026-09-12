@@ -34,4 +34,4 @@ sequenceDiagram
 
 Tenant provisioning shall preserve service ownership.
 
-No service may directly create records inside another service's database.
+No service may directly create records in another service's owned tables. Initial Production uses Turso Shared Database / Shared Schema; logical service boundaries remain. Shared schema is not unrestricted cross-service access.

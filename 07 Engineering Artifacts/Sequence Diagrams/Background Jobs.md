@@ -6,7 +6,7 @@ sequenceDiagram
     participant Scheduler as Scheduler
     participant Worker as Background Worker
     participant Service as Owning Service
-    participant DB as Service Database
+    participant DB as Shared Turso Database / Shared Schema
     participant EventBus as Event Bus
 
     Scheduler->>Worker: Trigger job

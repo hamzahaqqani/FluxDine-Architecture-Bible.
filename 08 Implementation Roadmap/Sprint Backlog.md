@@ -59,7 +59,7 @@ Establish backend service structure.
 
 ## FD-FND-005
 
-Configure PostgreSQL and Drizzle.
+Configure Turso (Shared Database / Shared Schema) and Drizzle ORM against the current Turso/libSQL-compatible database. PostgreSQL is a future migration target, not current foundation infrastructure.
 
 ## FD-FND-006
 

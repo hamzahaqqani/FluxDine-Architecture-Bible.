@@ -58,7 +58,7 @@ Establish:
 
 Establish:
 
-- PostgreSQL infrastructure
+- Turso (Shared Database / Shared Schema)
 - Database provisioning approach
 - Drizzle ORM
 - Migration system
@@ -67,6 +67,8 @@ Establish:
 - UUID strategy
 - Audit columns
 - Tenant-aware data conventions
+
+PostgreSQL remains a **future** migration target and is not Initial Production foundation infrastructure.
 
 ---
 

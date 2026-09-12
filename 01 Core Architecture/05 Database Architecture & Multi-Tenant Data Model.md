@@ -8,7 +8,7 @@
 
 **Document Name:** Database Architecture & Multi-Tenant Data Model
 
-**Version:** 1.0
+**Version:** 1.1
 
 **Status:** 🔒 LOCKED
 
@@ -20,7 +20,7 @@
 
 **Created:** 2026-07-31
 
-**Last Updated:** 2026-07-31
+**Last Updated:** 2026-09-12
 
 ---
 
@@ -3247,15 +3247,22 @@ FluxDine is designed to remain database-portable.
 
 ## Current State
 
-Development:
+Initial Production:
 
-* Turso (SQLite compatible)
+* Turso
+* Shared Database
+* Shared Schema
+* SQLite-compatible (libSQL)
+
+Turso is the current production database, not a development-only engine.
 
 ---
 
 ## Target
 
-Production architecture should remain compatible with PostgreSQL.
+PostgreSQL is a **future** migration target.
+
+Design should remain PostgreSQL-compatible so a later migration remains possible. PostgreSQL is not the current Initial Production database.
 
 ---
 
@@ -3532,7 +3539,7 @@ Status: Approved
 
 ## AD-028
 
-Maintain PostgreSQL portability while supporting Turso during development.
+Maintain PostgreSQL portability while using Turso Shared Database / Shared Schema for Initial Production. PostgreSQL remains a future migration target.
 
 Status: Approved
 
@@ -3638,4 +3645,5 @@ ADR-001 → ADR-030
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.1 | 2026-09-12 | FluxDine Architecture Team | Initial Production is Turso Shared Database / Shared Schema. PostgreSQL is a future migration target, not current production. |
 | 1.0 | YYYY-MM-DD | FluxDine Architecture Team | Initial approved and locked release |
