@@ -13,7 +13,7 @@
 | **Document ID** | FD-ENG-BE-009 |
 | **Document Name** | Payment Gateway Specification |
 | **Version** | 1.0 |
-| **Status** | Proposed |
+| **Status** | Approved/Locked |
 | **Owner** | FluxDine Engineering |
 | **Classification** | Internal Engineering Specification |
 | **Depends On** | Payment Service<br>Payment Framework<br>ADR-018 Payment Gateway Abstraction<br>ADR-037 Restaurant Payment Gateway Configuration |
@@ -56,12 +56,12 @@ This specification is referenced by:
 
 | Item | Value |
 |------|-------|
-| Status | Proposed |
-| Approval | Pending human review |
-| Implementation | Architecture defined; application alignment deferred until this document is approved |
+| Status | Approved / Locked |
+| Approval | Approved and locked by human architect |
+| Implementation | Architecture defined; application alignment remains a later implementation task |
 | Last Updated | 2026-09-13 |
 
-This document becomes Approved and Locked only after human review. It is not automatically locked.
+This document is Approved and Locked. It is the authoritative Payment Gateway Specification (FD-ENG-BE-009).
 
 ---
 
@@ -592,7 +592,7 @@ Not allowed in Phase 07–08:
 7. Tenant isolation is mandatory.
 8. Shared schema does not permit cross-tenant payment access.
 9. ADR-018 is not rewritten.
-10. This specification stays Proposed until human review.
+10. This specification is Approved and Locked.
 
 ---
 
@@ -629,4 +629,5 @@ Not allowed in Phase 07–08:
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.0 | 2026-09-13 | FluxDine Architecture | Approved and locked by human architect. FD-ENG-BE-009 is authoritative. |
 | 1.0 | 2026-09-13 | FluxDine Engineering | Proposed. Establishes Demo Payment Gateway as the current Phase 07–08 commerce testing gateway. Stripe Connect, Stripe Test Mode, live providers, and commercial SaaS billing remain future. |
