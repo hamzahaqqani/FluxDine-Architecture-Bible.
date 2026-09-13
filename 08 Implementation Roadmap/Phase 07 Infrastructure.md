@@ -155,6 +155,10 @@ The following are **not** Phase 07 implementation requirements:
 - Progressive delivery, blue/green, or canary infrastructure
 - Vercel Pro solely to run database backups
 - Stripe Connect or subscription billing implementation
+- Stripe Test Mode as the payment testing mechanism
+- Live restaurant payment processors
+
+Phase 07–08 restaurant commerce testing uses **Demo Payment Gateway** (FD-ENG-BE-009).
 - Automatic database failover
 
 These remain future capabilities unless a later accepted ADR changes scope.
@@ -295,5 +299,6 @@ Authoritative decisions for this phase include:
 
 | Version | Date | Description |
 |---|---|---|
+| 1.2 | 2026-09-13 | Demo Payment Gateway is the Phase 07–08 commerce testing gateway. Stripe Connect, Stripe Test Mode, and commercial SaaS billing remain non-goals. |
 | 1.1 | 2026-09-12 | Rewritten to match current Initial Production architecture and ADR-055. PostgreSQL, database-per-service, queue workers, Kubernetes, and automatic DNS/SSL are classified as future, not Phase 07. |
 | 1.0 | Initial | Original infrastructure phase checklist. |

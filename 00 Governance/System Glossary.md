@@ -10,7 +10,7 @@
 |---|---|
 | Document ID | FD-GOV-007 |
 | Document Name | System Glossary |
-| Version | 1.0 |
+| Version | 1.1 |
 | Status | Approved and Locked |
 | Owner | FluxDine Architecture Team |
 | Classification | Governance Reference |
@@ -165,7 +165,17 @@ A financial transaction processed through the Payment Service.
 
 ## Payment Gateway
 
-An external provider integration used to execute payment transactions.
+A payment gateway implementation behind the Payment Gateway Abstraction.
+
+Current Phase 07–08 commerce testing uses **Demo Payment Gateway**, which is an internal simulated gateway, not a live external processor.
+
+Live external processors (Stripe Connect, PayPal, and others) are **future**.
+
+---
+
+## Demo Payment Gateway
+
+The current non-production payment gateway implementation for Phase 07–08 restaurant commerce testing. It simulates payment outcomes. It is not Stripe Test Mode and not a live provider.
 
 ---
 
@@ -273,3 +283,11 @@ When a new architectural term becomes important:
 2. Add it to this glossary.
 3. Use the approved term consistently.
 4. Update affected documentation.
+
+---
+
+# Revision History
+
+| Version | Date | Author | Description |
+|----------|------|--------|-------------|
+| 1.1 | 2026-09-13 | FluxDine Architecture Team | Demo Payment Gateway; Payment Gateway is not only an external live processor. |

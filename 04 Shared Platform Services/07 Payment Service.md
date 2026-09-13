@@ -10,7 +10,7 @@
 |--------|-------|
 | **Document ID** | FD-SPS-007 |
 | **Document Name** | Payment Service |
-| **Version** | 1.1 |
+| **Version** | 1.2 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Platform Architecture Team |
 | **Classification** | Core Platform Service |
@@ -58,6 +58,8 @@ The Payment Service owns:
 
 The Payment Service executes payments through the shared Payment Framework.
 
+Current Phase 07–08 commerce testing uses **Demo Payment Gateway** behind the Payment Gateway Abstraction (FD-ENG-BE-009). Demo Payments are not a live processor. Stripe Connect, Stripe Test Mode, PayPal, and other live gateways are **future**. Commercial FluxDine SaaS subscription billing remains deferred.
+
 ---
 
 # Out of Scope
@@ -85,7 +87,7 @@ Commerce calculations belong to the Commerce Service.
 
 The Payment Service owns:
 
-- Payment Database
+- Payment domain data (logical ownership in the Turso Shared Database / Shared Schema)
 - Payment APIs
 - Payment Events
 - Payment Business Rules
@@ -268,6 +270,7 @@ The Payment Service shall support:
 
 - Shared Services Overview
 - Payment Framework
+- Payment Gateway Specification (FD-ENG-BE-009)
 - Billing Service
 - Commerce Service
 - Event Catalog
@@ -281,5 +284,6 @@ The Payment Service shall support:
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.2 | 2026-09-13 | FluxDine Platform Architecture Team | Current commerce testing gateway is Demo Payment Gateway (FD-ENG-BE-009). Stripe Connect and commercial SaaS billing remain future. |
 | 1.1 | 2026-09-12 | FluxDine Platform Architecture Team | Logical payment ownership on Turso Shared Database / Shared Schema. |
 | 1.0 | Initial Release | FluxDine Platform Architecture Team | Approved as the authoritative Payment Service specification |

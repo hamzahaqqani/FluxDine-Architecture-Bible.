@@ -106,13 +106,17 @@ Required stages include:
 
 Integrate Payment Service.
 
-Requirements:
+Current Phase 07–08:
 
-- Secure credential handling
-- Provider validation
+- Configure **Demo Payment Gateway** (no external credentials)
 - Configuration status
-- Gateway activation
 - Audit logging
+
+**Future** (not Phase 05–08 current requirement):
+
+- Secure live-provider credential handling
+- Provider validation against Stripe Connect / other live gateways
+- Gateway activation against a real processor
 
 ---
 

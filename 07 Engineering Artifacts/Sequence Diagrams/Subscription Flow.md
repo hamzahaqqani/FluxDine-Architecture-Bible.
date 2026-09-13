@@ -33,3 +33,5 @@ sequenceDiagram
 Billing owns subscription lifecycle.
 
 Payment owns payment execution.
+
+Commercial FluxDine SaaS subscription billing remains **deferred**. This sequence is the future/technical billing-payment boundary. Phase 07–08 Demo Payments apply to restaurant **commerce** orders, not commercial SaaS revenue.

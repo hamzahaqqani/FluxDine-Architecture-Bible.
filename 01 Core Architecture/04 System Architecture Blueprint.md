@@ -1,7 +1,7 @@
 Document 04
 System Architecture Blueprint
 
-Version: 1.1
+Version: 1.2
 
 Status: ✅ LOCKED
 
@@ -30,6 +30,8 @@ Current Initial Production is a Next.js application on Vercel (`fluxdine-staging
 Shared Platform Services below are **logical** application boundaries. They are not independently deployed microservices with separate databases, worker fleets, or Kubernetes in Initial Production.
 
 PostgreSQL, database-per-service, dedicated queues/workers/cache, Kubernetes, automatic custom-domain/DNS/SSL provisioning, and multi-region infrastructure remain **future** unless a later accepted ADR changes that.
+
+Phase 07–08 restaurant commerce payments use **Demo Payment Gateway** (FD-ENG-BE-009). Stripe Connect, Stripe Test Mode, PayPal, live processors, and commercial SaaS subscription billing remain **future**.
 
 Database backup and recovery follow ADR-055 (Turso PITR + GitHub Actions logical dumps to a dedicated private R2 backup bucket). Vercel Cron is for application scheduled jobs, not database backups.
 
@@ -470,7 +472,7 @@ Payment Service
 
 ↓
 
-Payment gateway adapters (Stripe / PayPal when configured)
+Payment gateway adapters (Demo Payment Gateway currently; Stripe Connect / PayPal when configured in the future)
 
 ↓
 
@@ -484,13 +486,21 @@ Notification Service
 
 Customer Confirmation
 
-Notice that the Restaurant Platform never communicates directly with Stripe or PayPal. It only interacts with the Payment Service.
+Notice that the Restaurant Platform never communicates directly with Stripe, PayPal, or any payment provider. It only interacts with the Payment Service. Current Phase 07–08 commerce testing uses Demo Payment Gateway. Stripe and PayPal are **future** live providers.
 
 7. Integration Architecture
 External Services
 Payment Providers
-Stripe
+
+Current (Phase 07–08 commerce testing):
+
+Demo Payment Gateway (simulated; FD-ENG-BE-009)
+
+Future:
+
+Stripe Connect
 PayPal
+Other live gateways
 Email
 
 Current provider:
@@ -583,7 +593,7 @@ Horizontal scaling of the managed application platform
 11. Architectural Decisions Register
 ID	Decision	Status
 AD-001	Unified Identity System	✅ Locked
-AD-002	Payment Gateway Abstraction Layer (Stripe + PayPal v1)	✅ Locked
+AD-002	Payment Gateway Abstraction Layer (ADR-018). Historical v1 drafts named Stripe + PayPal; current Phase 07–08 adapter is Demo Payment Gateway. Stripe Connect/PayPal remain future.	✅ Locked
 AD-003	Three-Application Platform (HQ, Self-Service, Restaurant Platform)	✅ Locked
 AD-004	Shared Platform Services Architecture	✅ Locked
 AD-005	One Restaurant = One Tenant	✅ Locked

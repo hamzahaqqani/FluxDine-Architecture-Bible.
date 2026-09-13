@@ -6,7 +6,7 @@ sequenceDiagram
     participant Consumer as Commerce/Billing
     participant Payment as Payment Service
     participant Gateway as Gateway Abstraction
-    participant Provider as Payment Provider
+    participant Provider as Demo Payment Gateway
     participant Audit as Audit Service
 
     Consumer->>Payment: Create payment request
@@ -33,7 +33,9 @@ Payment Service
         ↓
 Payment Gateway Abstraction
         ↓
-Payment Provider
+Demo Payment Gateway (CURRENT — Phase 07–08)
+        ↓
+(Future after Phase 08: Stripe Connect Gateway)
 ```
 
 Consumers never communicate directly with payment providers.

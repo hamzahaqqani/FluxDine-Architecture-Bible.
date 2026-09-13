@@ -247,7 +247,7 @@ Build restaurant configuration.
 
 ## FD-SELF-007
 
-Build payment gateway configuration.
+Build payment gateway configuration (Phase 07–08: Demo Payment Gateway; no live provider credentials).
 
 ## FD-SELF-008
 
@@ -295,7 +295,7 @@ Finalize Payment Service.
 
 ## FD-SVC-007
 
-Implement Payment Gateway Abstraction.
+Implement Payment Gateway Abstraction (current adapter: Demo Payment Gateway per FD-ENG-BE-009).
 
 ## FD-SVC-008
 

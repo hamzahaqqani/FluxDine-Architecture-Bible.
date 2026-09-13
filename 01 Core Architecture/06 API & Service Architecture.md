@@ -10,7 +10,7 @@
 | ------------------------------ | -------------------------- |
 | **Document ID**                | FD-ARCH-006                |
 | **Document Name**              | API & Service Architecture |
-| **Version**                    | **1.0**                    |
+| **Version**                    | **1.1**                    |
 | **Status**                     | **🔒 LOCKED**              |
 | **Classification**             | Internal                   |
 | **Owner**                      | FluxDine Architecture Team |
@@ -517,7 +517,19 @@ Payment Service
 
 ↓
 
-Stripe Adapter
+Demo Payment Gateway (CURRENT — Phase 07–08)
+
+↓
+
+Simulated Demo Transaction
+
+or, **future**:
+
+Payment Service
+
+↓
+
+Stripe Adapter / Stripe Connect Gateway
 
 ↓
 
@@ -548,6 +560,14 @@ Instead, dependencies are injected through interfaces.
 Application Service
 
 ↓
+
+Payment Interface
+
+↓
+
+Demo Payment Gateway (current)
+
+or, **future**:
 
 Payment Interface
 
@@ -1502,13 +1522,16 @@ Gateway Adapter
 Payment Provider
 Supported Providers
 
-Version 1
+Current (Phase 07–08):
 
-Stripe
-PayPal
+Demo Payment Gateway
+
+Historical Version 1 drafts listed Stripe and PayPal as current. That is **not** current.
 
 Future:
 
+Stripe Connect
+PayPal
 Adyen
 Mollie
 Square
@@ -1666,7 +1689,7 @@ Restaurant	Operational management	Commerce
 Commerce	Orders & checkout	Payment, Notification, Analytics
 Marketing	Promotions & campaigns	Notification
 Billing	SaaS subscriptions	Payment
-Payment	Gateway abstraction	Stripe, PayPal
+Payment	Gateway abstraction	Demo Payment Gateway (current); Stripe, PayPal (future)
 Notification	Communication	Email/SMS providers
 Analytics	Reporting	Event stream
 Part C Summary
@@ -2254,7 +2277,7 @@ Transaction
 | Commerce     | Orders & Checkout           | Payment, Notification, Analytics |
 | Marketing    | Promotions & Campaigns      | Notification                     |
 | Billing      | SaaS subscriptions          | Payment                          |
-| Payment      | Payment gateway abstraction | Gateway providers                |
+| Payment      | Payment gateway abstraction | Demo Payment Gateway (current); live gateways future |
 | Notification | Outbound communication      | Email/SMS providers              |
 | Analytics    | Reporting & Metrics         | Event stream                     |
 

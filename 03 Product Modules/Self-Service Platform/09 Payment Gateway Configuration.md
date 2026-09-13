@@ -12,7 +12,7 @@
 |--------|-------|
 | **Document ID** | FD-PM-SSP-009 |
 | **Document Name** | Payment Gateway Configuration |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Product & Engineering |
 | **Classification** | Internal Product Module Specification |
@@ -72,6 +72,8 @@ It provides:
 - Launch Readiness Support
 
 After launch, payment processing is performed by the shared Payment Framework.
+
+**Current Phase 07–08:** onboarding “payment gateway configuration” selects **Demo Payment Gateway**. It does **not** require real payment credentials, Stripe accounts, Stripe Test Mode, or live processor validation. Live gateway credential connection is **future** (after Phase 08 / Stripe Connect).
 
 ---
 
@@ -1428,4 +1430,5 @@ These capabilities are outside the current implementation scope but are fully su
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.1 | 2026-09-13 | FluxDine Product & Engineering | Phase 07–08 onboarding uses Demo Payment Gateway; live credentials are future. |
 | 1.0 | Initial Release | FluxDine Product & Engineering | Approved as the authoritative Payment Gateway Configuration specification for the FluxDine Self-Service Platform |

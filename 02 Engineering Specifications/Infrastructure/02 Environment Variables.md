@@ -12,7 +12,7 @@
 |---|---|
 | **Document ID** | FD-ENG-INF-002 |
 | **Document Name** | Environment Variables |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Engineering |
 | **Classification** | Internal Engineering Specification |
@@ -1044,6 +1044,17 @@ Environment variables shall not be used to override production cron frequency un
 # Payment Configuration
 
 FluxDine uses a shared Payment Service abstraction.
+
+Current Phase 07–08 restaurant commerce testing uses **Demo Payment Gateway**.
+
+```text
+FLUXDINE_PAYMENT_PROVIDER
+```
+
+Current implementation default: `test` (`TestPaymentProvider`).
+Target architectural identifier: `demo`.
+
+Stripe execution is **future**. `stripe` must remain inactive until after Phase 08 and an approved Connect/live implementation. Stripe Test Mode is not the Demo Payment mechanism.
 
 Stripe execution was intentionally deferred from earlier implementation stages and shall only become active after its architecture and integration requirements are approved.
 
@@ -2545,13 +2556,14 @@ Business modules shall interact with the service abstraction rather than directl
 
 | Version | Date       | Author               | Description                                 |
 | ------- | ---------- | -------------------- | ------------------------------------------- |
+| 1.1     | 2026-09-13 | FluxDine Engineering | Current FLUXDINE_PAYMENT_PROVIDER is Demo/`test`; Stripe remains future. |
 | 1.0     | 2026-09-12 | FluxDine Engineering | Initial Environment Variables specification |
 
 ---
 
 # Final Document State
 
-**Version:** 1.0
+**Version:** 1.1
 
 **Status:** Approved and Locked
 

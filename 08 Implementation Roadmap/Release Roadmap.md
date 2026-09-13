@@ -136,7 +136,7 @@ Enable the complete restaurant self-service lifecycle.
 - Trial
 - Onboarding
 - Configuration
-- Payment gateway setup
+- Payment gateway setup (Phase 07–08: Demo Payment Gateway; no live credentials)
 - Domain setup
 - Theme setup
 - Launch

@@ -12,7 +12,7 @@
 |--------|-------|
 | **Document ID** | FD-ENG-INF-004 |
 | **Document Name** | Monitoring |
-| **Version** | 1.2 |
+| **Version** | 1.3 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Engineering |
 | **Classification** | Internal Engineering Specification |
@@ -323,6 +323,10 @@ Email failure shall not unnecessarily interrupt unrelated application operations
 # Payment Monitoring
 
 Payment monitoring shall apply to payment integrations once active.
+
+For Phase 07–08, payment monitoring covers **Demo Payment Gateway** simulated success/failure. It must not describe Demo Transactions as live settled funds.
+
+Connected-account failures apply when Stripe Connect is active (**future**).
 
 Monitoring shall consider:
 
@@ -1047,6 +1051,7 @@ These capabilities shall not be considered implemented until separately designed
 
 | Version | Date             | Author               | Description                                                                                                    |
 | ------- | ---------------- | -------------------- | -------------------------------------------------------------------------------------------------------------- |
+| 1.3     | 2026-09-13 | FluxDine Engineering | Demo Payment monitoring is simulated; connected-account signals remain future Stripe Connect. |
 | 1.0     | Initial Release  | FluxDine Engineering | Initial Monitoring specification                                                                               |
 | 1.2     | 2026-09-12 | FluxDine Engineering | ADR-055 backup monitoring signals; labeled k8s/queue/Redis metrics as future; removed wrapping fences. |
 | 1.1     | Approved and Locked | FluxDine Engineering | Aligned monitoring architecture with current Vercel, Sentry, Turso, R2, Resend, and Vercel Cron infrastructure |

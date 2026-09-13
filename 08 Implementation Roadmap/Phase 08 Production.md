@@ -52,8 +52,8 @@ Validate:
 - Restaurant lifecycle
 - Ordering
 - Reservations
-- Payments
-- Subscriptions
+- Payments (Demo Payment Gateway for restaurant commerce; not Stripe Connect)
+- Subscriptions (lifecycle/technical records; commercial SaaS billing remains deferred)
 - Notifications
 - Domains
 - Themes
@@ -104,7 +104,7 @@ Monitor:
 - API errors
 - Application errors
 - Database health
-- Payment failures
+- Payment failures (including Demo Payment simulated failures; not live processor outages unless a live gateway is later activated)
 - Order failures
 - Authentication failures
 - Background job failures

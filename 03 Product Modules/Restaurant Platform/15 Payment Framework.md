@@ -12,7 +12,7 @@
 |--------|-------|
 | **Document ID** | FD-PM-RP-015 |
 | **Document Name** | Payment Framework |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved and Locked |
 | **Owner** | FluxDine Product & Engineering |
 | **Classification** | Internal Product Module Specification |
@@ -170,6 +170,8 @@ Payment Gateway
 ```
 
 Restaurant modules never communicate directly with payment gateways.
+
+Current Phase 07–08 gateway behind that abstraction is **Demo Payment Gateway** (FD-ENG-BE-009). It is not Stripe, Stripe Test Mode, or any live processor. Stripe Connect and live providers are **future**.
 
 ---
 
@@ -2173,3 +2175,10 @@ Before the Payment Framework is considered production-ready, the following requi
 | Automated Testing | Required |
 
 ---
+
+# Revision History
+
+| Version | Date | Author | Description |
+|----------|------|--------|-------------|
+| 1.1 | 2026-09-13 | FluxDine Product & Engineering | Current gateway is Demo Payment Gateway for Phase 07–08 commerce testing. |
+| 1.0 | Initial Release | FluxDine Product & Engineering | Approved as the Payment Framework specification |

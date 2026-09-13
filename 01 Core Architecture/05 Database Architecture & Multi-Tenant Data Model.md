@@ -8,7 +8,7 @@
 
 **Document Name:** Database Architecture & Multi-Tenant Data Model
 
-**Version:** 1.1
+**Version:** 1.2
 
 **Status:** 🔒 LOCKED
 
@@ -20,7 +20,7 @@
 
 **Created:** 2026-07-31
 
-**Last Updated:** 2026-09-12
+**Last Updated:** 2026-09-13
 
 ---
 
@@ -1944,20 +1944,23 @@ Restaurant
 
 Payment Service
 
-├── Stripe Adapter
-├── PayPal Adapter
-├── Future Adapter
-└── Sandbox Adapter
+├── Demo Payment Gateway   (CURRENT — Phase 07–08 commerce testing)
+├── Stripe Connect Gateway (FUTURE — after Phase 08)
+├── PayPal Adapter         (FUTURE)
+└── Future Adapter
 ```
+
+The historical label “Sandbox Adapter” refers to a non-live adapter idea. The authoritative current name is **Demo Payment Gateway** (FD-ENG-BE-009).
 
 ---
 
-## Version 1
+## Version 1 (historical provider assumption)
 
-Supported providers:
+Older drafts listed Stripe and PayPal as Version 1 **current** providers. That is **historical**. It is not the Phase 07–08 payment mode.
 
-* Stripe
-* PayPal
+Current Phase 07–08 provider:
+
+* Demo Payment Gateway (simulated; no live processor)
 
 ---
 
@@ -1986,11 +1989,13 @@ without changing restaurant code.
 Each tenant stores its own:
 
 * Provider
-* API credentials (encrypted)
-* Webhook configuration
+* API credentials (encrypted) — **future live providers only**
+* Webhook configuration — **future live providers**; Demo webhook simulation is internal
 * Currency
 * Supported payment methods
-* Sandbox/Production mode
+* Sandbox/Production mode — **not** Stripe Test Mode for Phase 07–08
+
+Phase 07–08 Demo Payment Gateway requires **no** restaurant payment-provider secrets.
 
 ---
 
@@ -3645,5 +3650,6 @@ ADR-001 → ADR-030
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
+| 1.2 | 2026-09-13 | FluxDine Architecture Team | Chapter 20 current gateway is Demo Payment Gateway. Stripe/PayPal Version 1 listing is historical. |
 | 1.1 | 2026-09-12 | FluxDine Architecture Team | Initial Production is Turso Shared Database / Shared Schema. PostgreSQL is a future migration target, not current production. |
 | 1.0 | YYYY-MM-DD | FluxDine Architecture Team | Initial approved and locked release |
